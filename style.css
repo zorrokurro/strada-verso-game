@@ -1,0 +1,831 @@
+/* 斯特拉達·維爾索 — AI GM 遊戲樣式
+   中世紀羊皮紙 + 像素風格 */
+
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=MedievalSharp&display=swap');
+
+:root {
+    /* 羊皮紙色調 */
+    --parchment: #d4c4a0;
+    --parchment-dark: #b8a67e;
+    --parchment-light: #e8dcc0;
+    --parchment-stain: #8b7355;
+    --ink: #2c1810;
+    --ink-light: #4a3728;
+    --ink-faded: #6b5744;
+    --blood: #8b0000;
+    --blood-dark: #5c0000;
+
+    /* 像素風強調色 */
+    --pixel-gold: #c9a84c;
+    --pixel-red: #a03030;
+    --pixel-blue: #4a6a8a;
+    --pixel-green: #4a7a4a;
+
+    /* 動態殘破程度 (0=完好, 1=完全崩潰) */
+    --decay: 0;
+    --stain-opacity: 0;
+    --tear-size: 0px;
+    --fade-amount: 0;
+    --crack-opacity: 0;
+
+    /* 字體 */
+    --font-pixel: 'VT323', 'Press Start 2P', monospace;
+    --font-medieval: 'MedievalSharp', 'Georgia', serif;
+    --font-body: 'VT323', monospace;
+
+    /* 邊框裝飾 */
+    --border-ornament: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M0 20 Q10 10 20 20 Q30 30 40 20' stroke='%238b7355' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    image-rendering: pixelated;
+}
+
+html, body {
+    height: 100%;
+    font-family: var(--font-body);
+    background: #1a1410;
+    color: var(--ink);
+    overflow: hidden;
+}
+
+/* ========== 羊皮紙紋理 ========== */
+.parchment-bg {
+    background:
+        /* 紙張紋理 */
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(139, 115, 85, 0.03) 2px,
+            rgba(139, 115, 85, 0.03) 4px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(139, 115, 85, 0.02) 2px,
+            rgba(139, 115, 85, 0.02) 4px
+        ),
+        /* 基礎色 */
+        linear-gradient(135deg, var(--parchment) 0%, var(--parchment-dark) 50%, var(--parchment) 100%);
+}
+
+/* 汙漬效果（隨 decay 增加） */
+.stain-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    opacity: var(--stain-opacity);
+    background:
+        radial-gradient(ellipse at 20% 30%, rgba(92, 0, 0, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(60, 40, 20, 0.4) 0%, transparent 40%),
+        radial-gradient(ellipse at 50% 50%, rgba(40, 30, 15, 0.2) 0%, transparent 60%);
+    mix-blend-mode: multiply;
+}
+
+/* 裂痕效果 */
+.crack-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    opacity: var(--crack-opacity);
+    background:
+        linear-gradient(45deg, transparent 48%, var(--ink) 48%, var(--ink) 52%, transparent 52%),
+        linear-gradient(-30deg, transparent 45%, var(--ink) 45%, var(--ink) 55%, transparent 55%);
+    background-size: 100px 100px, 80px 80px;
+    mix-blend-mode: overlay;
+}
+
+/* 邊緣燒焦效果 */
+.burn-edge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    box-shadow:
+        inset 0 0 calc(30px + var(--decay) * 50px) rgba(26, 20, 16, calc(0.3 + var(--decay) * 0.5)),
+        inset 0 0 calc(60px + var(--decay) * 80px) rgba(26, 20, 16, calc(0.1 + var(--decay) * 0.3));
+}
+
+/* 像素邊框裝飾 */
+.pixel-border {
+    border: 3px solid var(--ink);
+    box-shadow:
+        3px 3px 0 var(--ink),
+        -1px -1px 0 var(--parchment-dark),
+        inset 2px 2px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* 中世紀裝飾角 */
+.ornate-corners::before,
+.ornate-corners::after {
+    content: '✦';
+    position: absolute;
+    font-size: 1.2rem;
+    color: var(--pixel-gold);
+    text-shadow: 1px 1px 0 var(--ink);
+}
+.ornate-corners::before { top: 8px; left: 12px; }
+.ornate-corners::after { bottom: 8px; right: 12px; transform: rotate(180deg); }
+
+/* ========== Screen Management ========== */
+.screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+}
+.screen.active {
+    display: flex;
+}
+
+/* ========== 設定頁面 ========== */
+#settings-screen {
+    justify-content: center;
+    align-items: center;
+    background: #1a1410;
+}
+
+.settings-container {
+    width: 100%;
+    max-width: 440px;
+    padding: 40px 30px;
+    position: relative;
+}
+
+.settings-container .parchment-bg {
+    padding: 40px 30px;
+    border-radius: 0;
+    position: relative;
+}
+
+.settings-container h1 {
+    font-family: var(--font-medieval);
+    font-size: 2.2rem;
+    text-align: center;
+    color: var(--ink);
+    margin-bottom: 8px;
+    text-shadow: 2px 2px 0 var(--parchment-dark);
+    letter-spacing: 3px;
+}
+
+.subtitle {
+    text-align: center;
+    color: var(--ink-faded);
+    margin-bottom: 35px;
+    font-family: var(--font-pixel);
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+}
+
+.settings-form h2 {
+    font-family: var(--font-pixel);
+    font-size: 1.3rem;
+    color: var(--ink);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 8px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-family: var(--font-pixel);
+    font-size: 1.1rem;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--ink);
+    color: var(--ink);
+    font-family: var(--font-pixel);
+    font-size: 1.1rem;
+    transition: all 0.2s;
+    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--pixel-gold);
+    box-shadow: 0 0 0 2px var(--pixel-gold), inset 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-group input::placeholder {
+    color: var(--ink-faded);
+    opacity: 0.6;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    font-family: var(--font-pixel);
+    font-size: 0.9rem;
+    color: var(--ink-faded);
+}
+
+.form-group code {
+    font-family: var(--font-pixel);
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border: 1px solid var(--ink-faded);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--ink);
+    border: none;
+    color: var(--parchment);
+    font-family: var(--font-pixel);
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+    box-shadow: 4px 4px 0 var(--parchment-dark);
+}
+
+.btn-primary:hover {
+    background: var(--blood);
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--parchment-dark);
+}
+
+.btn-primary:disabled {
+    background: var(--ink-faded);
+    color: var(--parchment-dark);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+.error {
+    color: var(--blood);
+    font-family: var(--font-pixel);
+    font-size: 1rem;
+    text-align: center;
+    margin-top: 12px;
+    min-height: 20px;
+    text-shadow: 1px 1px 0 rgba(139, 0, 0, 0.3);
+}
+
+/* ========== 遊戲主畫面 ========== */
+#game-screen {
+    flex-direction: row;
+    background: #1a1410;
+}
+
+.game-layout {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+/* ========== 側邊欄（角色卷軸） ========== */
+.panel {
+    width: 300px;
+    min-width: 300px;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: margin-left 0.3s;
+    z-index: 10;
+}
+
+.panel .parchment-bg {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel.collapsed {
+    margin-left: -300px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 2px solid var(--ink);
+    position: relative;
+}
+
+.panel-header h2 {
+    font-family: var(--font-medieval);
+    font-size: 1.4rem;
+    color: var(--ink);
+    text-shadow: 1px 1px 0 var(--parchment-dark);
+}
+
+.btn-icon {
+    background: none;
+    border: 2px solid var(--ink);
+    color: var(--ink);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    font-family: var(--font-pixel);
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: var(--ink);
+    color: var(--parchment);
+}
+
+.panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+}
+
+.char-section {
+    margin-bottom: 18px;
+}
+
+.char-section h3 {
+    font-family: var(--font-pixel);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--ink);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed var(--ink-faded);
+}
+
+.char-section p {
+    font-family: var(--font-pixel);
+    font-size: 1.05rem;
+    color: var(--ink-light);
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+.char-section p strong {
+    color: var(--ink);
+}
+
+.char-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.char-section li {
+    font-family: var(--font-pixel);
+    font-size: 0.95rem;
+    color: var(--ink-light);
+    padding: 3px 0;
+    border-bottom: 1px dotted var(--ink-faded);
+}
+
+.panel-footer {
+    padding: 12px 20px;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    gap: 8px;
+}
+
+.btn-secondary {
+    flex: 1;
+    padding: 8px;
+    background: transparent;
+    border: 2px solid var(--ink);
+    color: var(--ink);
+    font-family: var(--font-pixel);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: var(--ink);
+    color: var(--parchment);
+}
+
+/* ========== 主遊戲區域（中央卷軸） ========== */
+.game-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    position: relative;
+}
+
+.game-main .parchment-bg {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    border-bottom: 2px solid var(--ink);
+    position: relative;
+}
+
+.game-header h1 {
+    font-family: var(--font-medieval);
+    font-size: 1.3rem;
+    color: var(--ink);
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 0 var(--parchment-dark);
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+#era-display {
+    font-family: var(--font-pixel);
+    font-size: 0.95rem;
+    color: var(--ink);
+    padding: 4px 12px;
+    border: 1px solid var(--ink);
+    background: rgba(201, 168, 76, 0.2);
+}
+
+/* ========== 聊天區域 ========== */
+.chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    scroll-behavior: smooth;
+    position: relative;
+}
+
+.chat-messages {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.message {
+    margin-bottom: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message-label {
+    font-family: var(--font-pixel);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    color: var(--ink-faded);
+}
+
+.message-content {
+    padding: 16px 20px;
+    line-height: 1.6;
+    font-family: var(--font-pixel);
+    font-size: 1.15rem;
+    position: relative;
+    color: var(--ink);
+}
+
+/* GM 訊息 - 卷軸區塊 */
+.message.gm .message-content {
+    background: rgba(139, 115, 85, 0.15);
+    border-left: 4px solid var(--ink);
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* 玩家訊息 */
+.message.player .message-content {
+    background: rgba(74, 106, 138, 0.15);
+    border-left: 4px solid var(--pixel-blue);
+    text-align: right;
+}
+
+/* 系統訊息 */
+.message.system .message-content {
+    background: rgba(160, 48, 48, 0.1);
+    border-left: 4px solid var(--pixel-red);
+    font-style: italic;
+    color: var(--ink-faded);
+    font-size: 1rem;
+}
+
+/* 故事訊息 */
+.message.story .message-content {
+    background: rgba(201, 168, 76, 0.1);
+    border: 2px solid var(--pixel-gold);
+    font-size: 1.2rem;
+    line-height: 1.8;
+    padding: 20px;
+}
+
+/* Loading indicator */
+.typing-indicator {
+    display: flex;
+    gap: 6px;
+    padding: 16px 20px;
+    background: rgba(139, 115, 85, 0.15);
+    border-left: 4px solid var(--ink);
+    width: fit-content;
+}
+
+.typing-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--ink);
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.3; }
+    30% { transform: translateY(-8px); opacity: 1; }
+}
+
+/* ========== 輸入區 ========== */
+.input-area {
+    padding: 16px 24px 20px;
+    border-top: 2px solid var(--ink);
+    position: relative;
+}
+
+.input-wrapper {
+    display: flex;
+    gap: 12px;
+    max-width: 800px;
+    margin: 0 auto;
+    align-items: flex-end;
+}
+
+#user-input {
+    flex: 1;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--ink);
+    color: var(--ink);
+    font-family: var(--font-pixel);
+    font-size: 1.15rem;
+    resize: none;
+    max-height: 120px;
+    line-height: 1.4;
+    transition: all 0.2s;
+    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#user-input:focus {
+    outline: none;
+    border-color: var(--pixel-gold);
+    box-shadow: 0 0 0 2px var(--pixel-gold), inset 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#user-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#user-input::placeholder {
+    color: var(--ink-faded);
+    opacity: 0.5;
+}
+
+.btn-send {
+    width: 48px;
+    height: 48px;
+    background: var(--ink);
+    border: none;
+    color: var(--parchment);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    box-shadow: 3px 3px 0 var(--parchment-dark);
+    font-family: var(--font-pixel);
+}
+
+.btn-send:hover {
+    background: var(--blood);
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 var(--parchment-dark);
+}
+
+.btn-send:disabled {
+    background: var(--ink-faded);
+    color: var(--parchment-dark);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+}
+
+.input-hint {
+    text-align: center;
+    font-family: var(--font-pixel);
+    font-size: 0.85rem;
+    color: var(--ink-faded);
+    margin-top: 8px;
+    opacity: 0.6;
+}
+
+/* ========== Modal ========== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(26, 20, 16, 0.9);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 700px;
+    max-height: 80vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-content .parchment-bg {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 2px solid var(--ink);
+}
+
+.modal-header h2 {
+    font-family: var(--font-medieval);
+    font-size: 1.3rem;
+    color: var(--ink);
+}
+
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+#story-content {
+    font-family: var(--font-pixel);
+    line-height: 1.7;
+    font-size: 1.1rem;
+    white-space: pre-wrap;
+    color: var(--ink);
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.modal-footer .btn-primary,
+.modal-footer .btn-secondary {
+    width: auto;
+    padding: 10px 24px;
+}
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--parchment-dark);
+    border-left: 1px solid var(--ink);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--ink);
+    border: 1px solid var(--parchment-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--ink-light);
+}
+
+/* ========== 動態殘破效果 ========== */
+body.decay-1 {
+    --stain-opacity: 0.1;
+    --crack-opacity: 0.05;
+}
+body.decay-2 {
+    --stain-opacity: 0.2;
+    --crack-opacity: 0.1;
+}
+body.decay-3 {
+    --stain-opacity: 0.35;
+    --crack-opacity: 0.2;
+}
+body.decay-4 {
+    --stain-opacity: 0.5;
+    --crack-opacity: 0.35;
+}
+body.decay-5 {
+    --stain-opacity: 0.7;
+    --crack-opacity: 0.5;
+}
+
+/* 殘破動畫 */
+@keyframes parchmentDecay {
+    0% { filter: sepia(0) brightness(1); }
+    100% { filter: sepia(0.4) brightness(0.85) contrast(1.1); }
+}
+
+body[class*="decay-"] .parchment-bg {
+    animation: parchmentDecay 0.5s ease forwards;
+}
+
+/* 文字模糊效果（高 decay 時） */
+body.decay-4 .message-content,
+body.decay-5 .message-content {
+    text-shadow: 0 0 1px rgba(44, 24, 16, 0.5);
+}
+
+body.decay-5 .message-content {
+    filter: blur(0.3px);
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+    .panel {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100%;
+        z-index: 100;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .panel.collapsed {
+        margin-left: -300px;
+    }
+
+    .game-header h1 {
+        font-size: 1rem;
+    }
+
+    .chat-area {
+        padding: 16px;
+    }
+
+    .input-area {
+        padding: 12px 16px 16px;
+    }
+}

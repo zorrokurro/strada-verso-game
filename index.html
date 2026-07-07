@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>斯特拉達·維爾索</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IM+Fell+English:ital@0;1&family=VT323&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --ink:#140900;
+  --p0:#f2e6c6;
+  --p1:#d8c07e;
+  --p2:#b08a36;
+  --p3:#7a5a18;
+  --walnut:#5a2c08;
+  --gold:#c49008;
+  --blood:#700e0e;
+  --dark:#08040a;
+}
+
+html,body{
+  width:100%;height:100%;overflow:hidden;
+  background:#080402;
+  font-family:'IM Fell English',serif;
+}
+
+.screen{display:none;width:100vw;height:100vh;position:relative;overflow:hidden}
+.screen.active{display:flex}
+
+.parch{
+  background:
+    repeating-linear-gradient(0deg,transparent 0,transparent 20px,rgba(20,9,0,.022) 20px,rgba(20,9,0,.022) 21px),
+    repeating-linear-gradient(90deg,transparent 0,transparent 24px,rgba(20,9,0,.018) 24px,rgba(20,9,0,.018) 25px),
+    radial-gradient(ellipse at 18% 12%,rgba(176,120,38,.55) 0%,transparent 38%),
+    radial-gradient(ellipse at 83% 88%,rgba(136,86,22,.45) 0%,transparent 36%),
+    radial-gradient(ellipse at 50% 50%,var(--p0) 0%,var(--p1) 52%,var(--p2) 100%);
+}
+
+.px-frame{
+  border:4px solid var(--ink);
+  box-shadow:
+    0 0 0 2px var(--gold),
+    0 0 0 5px var(--ink),
+    inset 0 0 0 1px rgba(255,210,80,.22),
+    5px 5px 0 rgba(20,9,0,.45);
+  position:relative;
+}
+.px-frame::before,.px-frame::after{content:'';position:absolute;width:22px;height:22px;background:var(--ink)}
+.px-frame::before{top:-6px;left:-6px;clip-path:polygon(0 0,100% 0,100% 28%,28% 28%,28% 100%,0 100%)}
+.px-frame::after{bottom:-6px;right:-6px;clip-path:polygon(72% 0,100% 0,100% 100%,0 100%,0 72%,72% 72%)}
+.px-corner-tr,.px-corner-bl{position:absolute;width:22px;height:22px;background:var(--ink)}
+.px-corner-tr{top:-6px;right:-6px;clip-path:polygon(0 0,100% 0,100% 100%,72% 100%,72% 28%,0 28%)}
+.px-corner-bl{bottom:-6px;left:-6px;clip-path:polygon(0 0,28% 0,28% 72%,100% 72%,100% 100%,0 100%)}
+
+.px-div{
+  height:4px;margin:16px 0;
+  background:repeating-linear-gradient(90deg,
+    var(--ink) 0,var(--ink) 4px,
+    var(--gold) 4px,var(--gold) 7px,
+    var(--ink) 7px,var(--ink) 11px,
+    transparent 11px,transparent 15px);
+}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{align-items:center;justify-content:center}
+
+.setup-card{width:490px;max-height:90vh;padding:34px 30px;overflow-y:auto}
+
+.logo-icon{
+  text-align:center;font-size:24px;letter-spacing:6px;
+  display:block;margin-bottom:12px;
+  filter:sepia(1) contrast(0.7) brightness(0.5);
+}
+
+.s-title{
+  font-family:'Press Start 2P',monospace;
+  font-size:11px;color:var(--ink);
+  text-align:center;letter-spacing:2px;line-height:1.9;
+  text-shadow:2px 2px 0 rgba(196,144,8,.35);
+}
+
+.s-sub{
+  font-family:'IM Fell English',serif;font-style:italic;
+  font-size:13px;color:var(--p3);
+  text-align:center;letter-spacing:1px;margin-top:5px;
+}
+
+.fld{margin-bottom:18px}
+
+.fld-lbl{
+  font-family:'Press Start 2P',monospace;
+  font-size:6px;color:var(--walnut);
+  letter-spacing:1.5px;margin-bottom:7px;display:block;
+}
+
+.parch-in,.parch-sel{
+  width:100%;padding:9px 12px;
+  background:rgba(242,230,198,.5);
+  border:0;
+  border-bottom:3px solid var(--ink);
+  border-right:2px solid var(--ink);
+  border-top:1px solid rgba(255,210,80,.35);
+  border-left:1px solid rgba(255,210,80,.35);
+  font-family:'VT323',monospace;font-size:19px;color:var(--ink);
+  outline:none;appearance:none;-webkit-appearance:none;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.22);
+}
+.parch-in::placeholder{color:var(--p2)}
+.parch-in:focus,.parch-sel:focus{
+  background:rgba(242,230,198,.88);
+  border-bottom-color:var(--gold);
+}
+
+.sel-wrap{position:relative}
+.sel-wrap::after{
+  content:'▼';position:absolute;
+  right:10px;top:50%;transform:translateY(-50%);
+  font-family:'Press Start 2P',monospace;font-size:6px;
+  color:var(--ink);pointer-events:none;
+}
+
+.fld-hint{
+  font-family:'IM Fell English',serif;font-style:italic;
+  font-size:11px;color:var(--p2);margin-top:4px;
+}
+
+.start-btn{
+  width:100%;padding:14px;
+  font-family:'Press Start 2P',monospace;
+  font-size:9px;letter-spacing:2px;
+  color:var(--p0);background:var(--walnut);
+  border:0;
+  border-bottom:5px solid var(--ink);
+  border-right:4px solid var(--ink);
+  border-top:1px solid rgba(255,155,55,.3);
+  border-left:1px solid rgba(255,155,55,.3);
+  cursor:pointer;margin-top:8px;
+  transition:transform .08s,border-width .08s,background .15s,color .15s;
+}
+.start-btn:hover{background:#7a3e12;color:var(--gold)}
+.start-btn:active{transform:translate(3px,3px);border-bottom-width:2px;border-right-width:1px}
+
+/* ── GAME SCREEN ── */
+#game-screen{flex-direction:column}
+.game-layout{display:flex;width:100%;height:calc(100% - 40px);flex:1}
+
+.sidebar{
+  width:214px;min-width:214px;
+  display:flex;flex-direction:column;
+  padding:10px 8px 8px;
+  border-right:4px solid var(--ink);
+  overflow-y:auto;position:relative;
+}
+
+.char-tag{
+  font-family:'Press Start 2P',monospace;
+  font-size:7px;letter-spacing:1px;color:var(--ink);
+  text-align:center;padding:7px 4px;
+  border:2px solid var(--ink);
+  background:rgba(20,9,0,.06);margin-bottom:9px;
+}
+
+.sec{
+  font-family:'Press Start 2P',monospace;
+  font-size:5px;letter-spacing:1.5px;color:var(--walnut);
+  margin:9px 0 5px;display:flex;align-items:center;gap:4px;
+}
+.sec::before{content:'►';font-size:5px}
+.sec::after{content:'';flex:1;height:1px;background:var(--walnut);opacity:.28}
+
+.srow{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:3px 0;border-bottom:1px dashed rgba(20,9,0,.14);
+}
+.slbl{font-family:'IM Fell English',serif;font-size:12px;color:var(--walnut)}
+.sval{font-family:'VT323',monospace;font-size:16px;color:var(--ink)}
+
+.bar-g{margin:5px 0}
+.bar-lbl{
+  font-family:'Press Start 2P',monospace;font-size:5px;color:var(--walnut);
+  display:flex;justify-content:space-between;margin-bottom:3px;
+}
+.bar-track{height:9px;border:2px solid var(--ink);background:rgba(20,9,0,.12)}
+.bar-fill{height:100%;transition:width .3s,background .5s}
+.b-hp{background:repeating-linear-gradient(90deg,#5a2c08 0,#5a2c08 5px,#481e04 5px,#481e04 7px)}
+.b-san{background:repeating-linear-gradient(90deg,#385880 0,#385880 5px,#284870 5px,#284870 7px)}
+.b-emo{background:repeating-linear-gradient(90deg,#28582a 0,#28582a 5px,#184818 5px,#184818 7px)}
+
+.ichip{
+  font-family:'IM Fell English',serif;font-size:11px;color:var(--ink);
+  padding:3px 6px 3px 16px;position:relative;margin:2px 0;
+  border-bottom:1px solid rgba(20,9,0,.12);
+}
+.ichip::before{content:'◆';position:absolute;left:4px;font-size:7px;color:var(--gold);top:50%;transform:translateY(-50%)}
+
+.sb-btns{display:flex;gap:6px;padding-top:10px;margin-top:auto}
+.sbbtn{
+  flex:1;padding:7px 2px;
+  font-family:'Press Start 2P',monospace;font-size:5px;letter-spacing:.5px;
+  color:var(--p0);background:var(--walnut);
+  border:0;border-bottom:3px solid var(--ink);border-right:2px solid var(--ink);
+  cursor:pointer;
+}
+.sbbtn.danger{background:var(--blood)}
+.sbbtn:hover{filter:brightness(1.2)}
+
+.main-area{flex:1;display:flex;flex-direction:column;min-width:0}
+
+.titlebar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;border-bottom:3px solid var(--ink);
+  background:rgba(20,9,0,.07);flex-shrink:0;
+}
+.tb-t{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--ink);letter-spacing:1px}
+.tb-r{display:flex;align-items:center;gap:8px}
+.era-badge{
+  font-family:'VT323',monospace;font-size:15px;
+  padding:2px 9px;background:var(--walnut);color:var(--p0);
+  border:2px solid var(--ink);
+}
+.gear{
+  width:28px;height:28px;font-size:13px;
+  background:var(--p2);border:2px solid var(--ink);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--p0);
+}
+
+.narr-area{flex:1;padding:22px 28px;overflow-y:auto;position:relative}
+
+.scene-tag{
+  font-family:'VT323',monospace;font-size:15px;color:var(--p3);
+  display:block;margin-bottom:14px;
+  border-left:3px solid var(--gold);padding-left:8px;
+}
+
+.narr-body{
+  font-family:'IM Fell English',serif;font-size:15px;line-height:2;color:var(--ink);
+}
+
+.choice-list{
+  margin-top:18px;border-top:1px solid rgba(20,9,0,.18);padding-top:12px;
+}
+.choice-head{
+  font-family:'Press Start 2P',monospace;font-size:6px;
+  color:var(--walnut);letter-spacing:1px;margin-bottom:10px;
+}
+.choice-item{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:8px 10px;margin-bottom:6px;
+  background:rgba(20,9,0,.04);
+  border:1px solid rgba(20,9,0,.14);border-left:3px solid var(--gold);
+  cursor:pointer;transition:background .15s;
+}
+.choice-item:hover{background:rgba(196,144,8,.12)}
+.c-num{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--gold);margin-top:2px;flex-shrink:0}
+.c-txt{font-family:'IM Fell English',serif;font-size:14px;color:var(--ink);line-height:1.6}
+
+.narr-note{
+  font-family:'IM Fell English',serif;font-style:italic;
+  font-size:13px;color:var(--p3);margin-top:14px;
+  padding:8px 12px;border-left:2px dashed var(--p1);
+}
+
+.input-row{
+  display:flex;gap:8px;padding:10px 14px;
+  border-top:3px solid var(--ink);background:rgba(20,9,0,.05);flex-shrink:0;
+}
+.act-in{
+  flex:1;padding:9px 12px;
+  font-family:'IM Fell English',serif;font-size:15px;color:var(--ink);
+  background:rgba(242,230,198,.42);
+  border:2px solid var(--ink);outline:none;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.18);
+}
+.act-in::placeholder{color:var(--p2);font-style:italic}
+.send-btn{
+  width:42px;height:42px;background:var(--walnut);
+  border:0;border-bottom:4px solid var(--ink);border-right:3px solid var(--ink);
+  color:var(--gold);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .08s,border-width .08s;
+}
+.send-btn:active{transform:translate(2px,2px);border-bottom-width:1px;border-right-width:1px}
+
+/* ── DECAY ── */
+.decay-layer{position:absolute;inset:0;pointer-events:none;z-index:20}
+
+@keyframes inkWobble{
+  0%,100%{transform:skewX(0deg) skewY(0deg)}
+  22%{transform:skewX(.45deg) skewY(.12deg)}
+  44%{transform:skewX(-.25deg) skewY(-.06deg)}
+  66%{transform:skewX(.52deg) skewY(.16deg)}
+  88%{transform:skewX(-.32deg) skewY(.06deg)}
+}
+@keyframes inkBleed{
+  0%,100%{text-shadow:0 0 0 transparent}
+  50%{text-shadow:1px 1px 3px rgba(112,14,14,.38),0 0 6px rgba(80,10,10,.18)}
+}
+@keyframes flicker{
+  0%,93%,100%{opacity:1}
+  94%{opacity:.9}
+  96%{opacity:.72}
+  98%{opacity:.94}
+}
+@keyframes shadowPulse{
+  0%,100%{opacity:.65}50%{opacity:1}
+}
+
+/* ── MODAL ── */
+.modal{
+  display:none;position:fixed;inset:0;z-index:100;
+  background:rgba(6,2,0,.92);
+  align-items:center;justify-content:center;
+}
+.modal.active{display:flex}
+.modal-card{width:520px;max-height:85vh;padding:28px 24px;overflow-y:auto}
+.modal-title{
+  font-family:'Press Start 2P',monospace;font-size:10px;
+  color:var(--ink);text-align:center;margin-bottom:16px;
+}
+.modal-body{
+  font-family:'IM Fell English',serif;font-size:14px;
+  line-height:1.9;color:var(--ink);
+  white-space:pre-wrap;margin-bottom:16px;
+}
+.modal-btns{display:flex;gap:8px;justify-content:center}
+.modal-btn{
+  padding:10px 18px;
+  font-family:'Press Start 2P',monospace;font-size:7px;
+  color:var(--p0);background:var(--walnut);
+  border:0;border-bottom:3px solid var(--ink);border-right:2px solid var(--ink);
+  cursor:pointer;
+}
+.modal-btn:hover{filter:brightness(1.2)}
+.modal-btn.secondary{background:var(--p3)}
+
+/* ── DEBUG BAR ── */
+.dbg{
+  position:fixed;bottom:0;left:0;right:0;height:40px;
+  background:rgba(6,2,0,.93);
+  border-top:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  z-index:999;
+}
+.dbg label{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--gold);letter-spacing:1px}
+.dbg input[type=range]{
+  -webkit-appearance:none;width:180px;height:8px;
+  background:var(--p3);border:2px solid var(--gold);outline:none;
+}
+.dbg input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;
+  background:var(--gold);border:2px solid var(--ink);cursor:pointer;
+}
+.dbg .snum{font-family:'VT323',monospace;font-size:21px;color:#fff;min-width:34px;text-align:center}
+.dbg .tgl{
+  font-family:'Press Start 2P',monospace;font-size:5px;letter-spacing:1px;
+  padding:5px 9px;background:var(--gold);color:var(--ink);border:none;cursor:pointer;
+}
+.dbg .tgl:hover{background:#e0a820}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SETUP ══════════════ -->
+<div id="setup-screen" class="screen active parch">
+  <div class="decay-layer" id="sd"></div>
+  <div class="setup-card parch px-frame">
+    <div class="px-corner-tr"></div>
+    <div class="px-corner-bl"></div>
+
+    <span class="logo-icon">✦ ☽ ✦</span>
+    <div class="s-title">斯特拉達<br>維爾索</div>
+    <div class="s-sub">— AI GM 互動敘事遊戲 —</div>
+
+    <div class="px-div"></div>
+
+    <div class="fld">
+      <label class="fld-lbl">► 你的名字</label>
+      <input type="text" class="parch-in" id="inp-name" placeholder="輸入你的角色名字">
+      <div class="fld-hint">※ 只需要名字，其他由 AI 根據世界觀生成</div>
+    </div>
+
+    <div class="fld">
+      <label class="fld-lbl">► AI 模型</label>
+      <div class="sel-wrap">
+        <select class="parch-sel" id="inp-provider">
+          <option value="ollama">Ollama（本地模型）</option>
+          <option value="openai">OpenAI API</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="fld" id="ollama-url-fld">
+      <label class="fld-lbl">► Ollama 位址</label>
+      <input type="text" class="parch-in" id="inp-url" value="http://localhost:11434">
+      <div class="fld-hint">啟動前執行：OLLAMA_ORIGINS=* ollama serve</div>
+    </div>
+
+    <div class="fld" id="openai-key-fld" style="display:none">
+      <label class="fld-lbl">► API Key</label>
+      <input type="password" class="parch-in" id="inp-key" placeholder="sk-...">
+      <div class="fld-hint">※ 只存在瀏覽器中，不會外傳</div>
+    </div>
+
+    <div class="fld">
+      <label class="fld-lbl">► 模型選擇</label>
+      <div class="sel-wrap">
+        <select class="parch-sel" id="inp-model"></select>
+      </div>
+    </div>
+
+    <div class="px-div"></div>
+    <button class="start-btn" id="start-btn">⚔ 開始遊戲 ⚔</button>
+    <div class="fld-hint" id="err-msg" style="color:var(--blood);text-align:center;margin-top:8px"></div>
+  </div>
+</div>
+
+<!-- ══════════════ GAME ══════════════ -->
+<div id="game-screen" class="screen parch">
+  <div class="decay-layer" id="gd"></div>
+  <div class="game-layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="char-tag" id="sidebar-name">—</div>
+
+      <div class="sec">基本資料</div>
+      <div class="srow"><span class="slbl">性別</span><span class="sval" id="sb-gender">—</span></div>
+      <div class="srow"><span class="slbl">年齡</span><span class="sval" id="sb-age">—</span></div>
+      <div class="srow"><span class="slbl">時代</span><span class="sval" id="sb-era" style="font-size:13px">—</span></div>
+      <div class="srow"><span class="slbl">地域</span><span class="sval" id="sb-region">—</span></div>
+      <div class="srow"><span class="slbl">階級</span><span class="sval" id="sb-class">—</span></div>
+      <div class="srow"><span class="slbl">職業</span><span class="sval" id="sb-occ" style="font-size:13px">—</span></div>
+
+      <div class="sec">狀態</div>
+      <div class="bar-g">
+        <div class="bar-lbl"><span>健康</span><span id="sb-health-lbl">良好</span></div>
+        <div class="bar-track"><div class="bar-fill b-hp" id="sb-health-bar" style="width:80%"></div></div>
+      </div>
+      <div class="bar-g">
+        <div class="bar-lbl"><span>理智</span><span id="sb-san-lbl">100</span></div>
+        <div class="bar-track"><div class="bar-fill b-san" id="sb-san-bar" style="width:100%"></div></div>
+      </div>
+      <div class="bar-g">
+        <div class="bar-lbl"><span>情緒</span><span id="sb-mood-lbl">平靜</span></div>
+        <div class="bar-track"><div class="bar-fill b-emo" id="sb-emo-bar" style="width:70%"></div></div>
+      </div>
+      <div class="srow"><span class="slbl">資金</span><span class="sval" id="sb-currency">0 阿爾納</span></div>
+
+      <div class="sec">能力</div>
+      <div class="ichip" id="sb-ability">普通人</div>
+
+      <div class="sec">物品</div>
+      <div id="sb-items"></div>
+
+      <div class="sec">已知資訊</div>
+      <div id="sb-knowledge"></div>
+
+      <div class="sb-btns">
+        <button class="sbbtn" id="btn-export">匯出故事</button>
+        <button class="sbbtn danger" id="btn-newgame">✕ 新遊戲</button>
+      </div>
+    </div>
+
+    <!-- MAIN AREA -->
+    <div class="main-area">
+      <div class="titlebar">
+        <div class="tb-t">✕ 斯特拉達．維爾索</div>
+        <div class="tb-r">
+          <span class="era-badge" id="tb-era">—</span>
+          <div class="gear" id="btn-settings">⚙</div>
+        </div>
+      </div>
+
+      <div class="narr-area" id="narr-area">
+        <span class="scene-tag" id="scene-tag">─── 載入中... ───</span>
+        <div id="narr-container"></div>
+        <div class="choice-list" id="choice-list" style="display:none">
+          <div class="choice-head">── 選擇 ──</div>
+          <div id="choice-items"></div>
+        </div>
+        <div class="narr-note" id="narr-note" style="display:none"></div>
+      </div>
+
+      <div class="input-row">
+        <input type="text" class="act-in" id="user-input" placeholder="輸入你的行動..." disabled>
+        <button class="send-btn" id="btn-send" disabled>▶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MODAL ══════════════ -->
+<div class="modal" id="story-modal">
+  <div class="modal-card parch px-frame">
+    <div class="px-corner-tr"></div>
+    <div class="px-corner-bl"></div>
+    <div class="modal-title">📜 角色的一生</div>
+    <div class="modal-body" id="story-content"></div>
+    <div class="modal-btns">
+      <button class="modal-btn" id="btn-copy">📋 複製</button>
+      <button class="modal-btn secondary" id="btn-download">💾 下載</button>
+      <button class="modal-btn secondary" id="btn-close-modal">✕ 關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ DEBUG ══════════════ -->
+<div class="dbg">
+  <label>理智值</label>
+  <input type="range" min="0" max="100" value="100" id="dbg-san">
+  <span class="snum" id="dbg-san-num">100</span>
+  <button class="tgl" id="dbg-toggle">切換畫面</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
