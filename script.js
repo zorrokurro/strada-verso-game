@@ -124,9 +124,10 @@ const AI = {
             const data = await response.json();
             return data.message.content;
         } catch (e) {
+            console.error('Ollama chat error:', e);
             if (e.name === 'AbortError') throw new Error('Ollama 回應超時（2分鐘）');
-            if (e.name === 'TypeError' && e.message.includes('fetch')) {
-                throw new Error('CORS 錯誤：請執行 OLLAMA_ORIGINS=* ollama serve');
+            if (e.name === 'TypeError') {
+                throw new Error('無法連線到 Ollama。請確認 Ollama 正在運行且網址正確。');
             }
             throw e;
         }
@@ -551,17 +552,6 @@ const UI = {
         document.getElementById('btn-copy').addEventListener('click', () => this.copyStory());
         document.getElementById('btn-download').addEventListener('click', () => this.downloadStory());
 
-        // Debug
-        document.getElementById('dbg-san').addEventListener('input', (e) => {
-            const v = +e.target.value;
-            GameState.sanity = v;
-            document.getElementById('dbg-san-num').textContent = v;
-            this.updateSanityUI(v);
-            DecayEngine.render(v);
-        });
-        document.getElementById('dbg-toggle').addEventListener('click', () => {
-            this.currentScreen === 'setup' ? this.gotoGame() : this.gotoSetup();
-        });
     },
 
     gotoGame() {
@@ -629,15 +619,23 @@ const UI = {
 
     async testOllamaConnection(url) {
         try {
-            const response = await fetch(`${url}/api/tags`, { method: 'GET' });
+            const response = await fetch(`${url}/api/tags`, {
+                method: 'GET',
+                mode: 'cors',
+                headers: { 'Accept': 'application/json' }
+            });
             if (response.ok) {
                 const data = await response.json();
                 return { success: true, models: (data.models || []).map(m => m.name) };
             }
             return { success: false, error: `HTTP ${response.status}` };
         } catch (e) {
-            if (e.name === 'TypeError' && e.message.includes('fetch')) {
-                return { success: false, error: 'CORS 錯誤' };
+            console.error('Connection test failed:', e);
+            if (e.name === 'TypeError') {
+                return { success: false, error: '無法連線到 Ollama。請確認：\n1. Ollama 正在運行\n2. 已設定 OLLAMA_ORIGINS=*\n3. 網址正確' };
+            }
+            if (e.name === 'AbortError') {
+                return { success: false, error: '連線超時' };
             }
             return { success: false, error: e.message };
         }

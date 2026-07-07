@@ -336,29 +336,7 @@ html,body{
 .modal-btn:hover{filter:brightness(1.2)}
 .modal-btn.secondary{background:var(--p3)}
 
-/* ── DEBUG BAR ── */
-.dbg{
-  position:fixed;bottom:0;left:0;right:0;height:40px;
-  background:rgba(6,2,0,.93);
-  border-top:2px solid var(--gold);
-  display:flex;align-items:center;justify-content:center;gap:14px;
-  z-index:999;
-}
-.dbg label{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--gold);letter-spacing:1px}
-.dbg input[type=range]{
-  -webkit-appearance:none;width:180px;height:8px;
-  background:var(--p3);border:2px solid var(--gold);outline:none;
-}
-.dbg input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:14px;height:14px;
-  background:var(--gold);border:2px solid var(--ink);cursor:pointer;
-}
-.dbg .snum{font-family:'VT323',monospace;font-size:21px;color:#fff;min-width:34px;text-align:center}
-.dbg .tgl{
-  font-family:'Press Start 2P',monospace;font-size:5px;letter-spacing:1px;
-  padding:5px 9px;background:var(--gold);color:var(--ink);border:none;cursor:pointer;
-}
-.dbg .tgl:hover{background:#e0a820}
+/* DEBUG CSS REMOVED */
 </style>
 </head>
 <body>
@@ -507,13 +485,7 @@ html,body{
   </div>
 </div>
 
-<!-- ══════════════ DEBUG ══════════════ -->
-<div class="dbg">
-  <label>理智值</label>
-  <input type="range" min="0" max="100" value="100" id="dbg-san">
-  <span class="snum" id="dbg-san-num">100</span>
-  <button class="tgl" id="dbg-toggle">切換畫面</button>
-</div>
+<!-- DEBUG BAR REMOVED -->
 
 <script src="script.js"></script>
 </body>
