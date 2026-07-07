@@ -762,12 +762,20 @@ const UI = {
         let character = null;
         let openingNarrative = response;
 
+        // Strip markdown code blocks (```json ... ``` or ``` ... ```)
+        let cleaned = response.replace(/```(?:json)?\s*\n?/g, '').replace(/```\s*\n?/g, '');
+
         try {
-            const jsonMatch = response.match(/\{[\s\S]*?\}/);
+            const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 character = JSON.parse(jsonMatch[0]);
-                const jsonEnd = response.indexOf(jsonMatch[0]) + jsonMatch[0].length;
-                openingNarrative = response.substring(jsonEnd).trim();
+                // 開場敘事是 JSON 之後的部分
+                const jsonEnd = cleaned.indexOf(jsonMatch[0]) + jsonMatch[0].length;
+                openingNarrative = cleaned.substring(jsonEnd).trim();
+                // If narrative is empty, use text before JSON
+                if (!openingNarrative) {
+                    openingNarrative = cleaned.substring(0, cleaned.indexOf(jsonMatch[0])).trim();
+                }
             }
         } catch (e) {
             console.warn('Parse failed:', e);
