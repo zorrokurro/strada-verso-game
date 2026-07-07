@@ -78,6 +78,8 @@ const AI = {
         const { apiProvider, apiKey, ollamaUrl, model } = GameState.settings;
         if (apiProvider === 'ollama') {
             return this.chatOllama(messages, ollamaUrl);
+        } else if (apiProvider === 'gemini') {
+            return this.chatGemini(messages, apiKey, model);
         } else {
             return this.chatOpenAI(messages, apiKey, model);
         }
@@ -103,6 +105,53 @@ const AI = {
         }
         const data = await response.json();
         return data.choices[0].message.content;
+    },
+
+    async chatGemini(messages, apiKey, model) {
+        // Convert OpenAI format to Gemini format
+        const contents = [];
+        let systemInstruction = '';
+
+        messages.forEach(msg => {
+            if (msg.role === 'system') {
+                systemInstruction = msg.content;
+            } else {
+                contents.push({
+                    role: msg.role === 'assistant' ? 'model' : 'user',
+                    parts: [{ text: msg.content }]
+                });
+            }
+        });
+
+        const body = {
+            contents: contents,
+            generationConfig: {
+                temperature: 0.85,
+                maxOutputTokens: 1500,
+            }
+        };
+
+        if (systemInstruction) {
+            body.systemInstruction = { parts: [{ text: systemInstruction }] };
+        }
+
+        const modelName = model || 'gemini-2.0-flash';
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            }
+        );
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.error?.message || `Gemini 錯誤：${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
     },
 
     async chatOllama(messages, ollamaUrl) {
@@ -518,13 +567,26 @@ const UI = {
     bindEvents() {
         // Provider 切換
         document.getElementById('inp-provider').addEventListener('change', async (e) => {
-            const isOllama = e.target.value === 'ollama';
+            const provider = e.target.value;
+            const isOllama = provider === 'ollama';
             document.getElementById('ollama-url-fld').style.display = isOllama ? 'block' : 'none';
-            document.getElementById('openai-key-fld').style.display = isOllama ? 'none' : 'block';
-            if (isOllama) {
-                await this.updateOllamaModels();
+            document.getElementById('api-key-fld').style.display = isOllama ? 'none' : 'block';
+
+            const modelSelect = document.getElementById('inp-model');
+            if (provider === 'gemini') {
+                modelSelect.innerHTML = `
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash（快速）</option>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash（推薦）</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro（最強）</option>
+                `;
+            } else if (provider === 'openai') {
+                modelSelect.innerHTML = `
+                    <option value="gpt-4o-mini">GPT-4o Mini</option>
+                    <option value="gpt-4o">GPT-4o</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                `;
             } else {
-                this.updateOpenAIModels();
+                await this.updateOllamaModels();
             }
         });
 
@@ -664,7 +726,7 @@ const UI = {
         const ollamaUrl = document.getElementById('inp-url').value.trim();
         const model = document.getElementById('inp-model').value;
 
-        if (provider === 'openai' && !apiKey) {
+        if ((provider === 'openai' || provider === 'gemini') && !apiKey) {
             document.getElementById('err-msg').textContent = '請輸入 API Key';
             return;
         }
