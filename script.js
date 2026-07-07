@@ -975,6 +975,8 @@ const UI = {
                 items: ['基本衣物'], knowledge: [],
             };
         }
+        if (typeof character.currency !== 'number') character.currency = parseInt(character.currency) || 10;
+        if (typeof character.age !== 'number') character.age = parseInt(character.age) || 20;
         GameState.character = character;
         GameState.started = true;
         GameState.dead = false;
