@@ -1,4 +1,4 @@
-// 斯特拉達·維爾索 — AI GM 遊戲邏輯（像素風格版）
+// 斯特拉達·維爾索 — AI GM 遊戲邏輯（優化版）
 
 // ============================================================
 // 遊戲狀態管理
@@ -7,16 +7,19 @@
 const GameState = {
     settings: {
         playerName: '',
-        apiProvider: 'ollama',
+        apiProvider: 'gemini',
         apiKey: '',
         ollamaUrl: 'http://localhost:11434',
-        model: 'qwen2.5:7b',
+        model: 'gemini-2.5-flash',
     },
     character: null,
     messages: [],
     started: false,
     story: null,
-    sanity: 100, // 理智值 0-100
+    sanity: 100,
+    dead: false,
+    inputHistory: [],
+    historyIndex: -1,
 
     load() {
         try {
@@ -29,6 +32,8 @@ const GameState = {
                 this.started = data.started || false;
                 this.story = data.story || null;
                 this.sanity = data.sanity ?? 100;
+                this.dead = data.dead || false;
+                this.inputHistory = data.inputHistory || [];
                 return true;
             }
         } catch (e) {
@@ -46,6 +51,8 @@ const GameState = {
                 started: this.started,
                 story: this.story,
                 sanity: this.sanity,
+                dead: this.dead,
+                inputHistory: this.inputHistory.slice(-50),
             }));
         } catch (e) {
             console.error('Save failed:', e);
@@ -55,17 +62,162 @@ const GameState = {
     reset() {
         this.settings = {
             playerName: '',
-            apiProvider: 'ollama',
+            apiProvider: 'gemini',
             apiKey: '',
             ollamaUrl: 'http://localhost:11434',
-            model: 'qwen2.5:7b',
+            model: 'gemini-2.5-flash',
         };
         this.character = null;
         this.messages = [];
         this.started = false;
         this.story = null;
         this.sanity = 100;
+        this.dead = false;
+        this.inputHistory = [];
+        this.historyIndex = -1;
         localStorage.removeItem('strada-game-state');
+    }
+};
+
+// ============================================================
+// 死亡偵測 & 狀態解析
+// ============================================================
+
+const GameEngine = {
+    // 死亡關鍵詞
+    DEATH_KEYWORDS: [
+        '斷氣', '死了', '死亡', '消逝', '失去意識', '倒下', '再也沒有站起來',
+        '生命流逝', '最後一口氣', '閉上眼睛', '永遠停止', '心臟停止',
+        '倒在血泊', '失去呼吸', '意識消散', '走向終點', '燃盡',
+        '化為灰燼', '被吞噬', '墜入深淵', '終結', '落幕',
+    ],
+
+    // 偵測是否死亡
+    detectDeath(response) {
+        return this.DEATH_KEYWORDS.some(kw => response.includes(kw));
+    },
+
+    // 從 AI 回覆解析狀態更新
+    parseStatusUpdates(response) {
+        const updates = {};
+
+        // 解析 [health:XXX] 標記
+        const healthMatch = response.match(/\[health[:：](.+?)\]/);
+        if (healthMatch) updates.health = healthMatch[1].trim();
+
+        // 解析 [mood:XXX] 標記
+        const moodMatch = response.match(/\[mood[:：](.+?)\]/);
+        if (moodMatch) updates.mood = moodMatch[1].trim();
+
+        // 解析 [currency:XXX] 標記
+        const currMatch = response.match(/\[currency[:：](\d+)\]/);
+        if (currMatch) updates.currency = parseInt(currMatch[1]);
+
+        // 解析 [ability:XXX] 標記
+        const abilMatch = response.match(/\[ability[:：](.+?)\]/);
+        if (abilMatch) updates.abilityStatus = abilMatch[1].trim();
+
+        // 解析 [addItem:XXX] 標記
+        const addItems = [];
+        const addItemRegex = /\[addItem[:：](.+?)\]/g;
+        let m;
+        while ((m = addItemRegex.exec(response)) !== null) {
+            addItems.push(m[1].trim());
+        }
+        if (addItems.length > 0) updates.addItems = addItems;
+
+        // 解析 [removeItem:XXX] 標記
+        const removeItems = [];
+        const removeItemRegex = /\[removeItem[:：](.+?)\]/g;
+        while ((m = removeItemRegex.exec(response)) !== null) {
+            removeItems.push(m[1].trim());
+        }
+        if (removeItems.length > 0) updates.removeItems = removeItems;
+
+        // 解析 [addKnowledge:XXX] 標記
+        const addKnow = [];
+        const addKnowRegex = /\[addKnowledge[:：](.+?)\]/g;
+        while ((m = addKnowRegex.exec(response)) !== null) {
+            addKnow.push(m[1].trim());
+        }
+        if (addKnow.length > 0) updates.addKnowledge = addKnow;
+
+        // 解析 [region:XXX] 標記
+        const regionMatch = response.match(/\[region[:：](.+?)\]/);
+        if (regionMatch) updates.region = regionMatch[1].trim();
+
+        // 清除標記文字
+        updates.cleanText = response
+            .replace(/\[health[:：].+?\]/g, '')
+            .replace(/\[mood[:：].+?\]/g, '')
+            .replace(/\[currency[:：].+?\]/g, '')
+            .replace(/\[ability[:：].+?\]/g, '')
+            .replace(/\[addItem[:：].+?\]/g, '')
+            .replace(/\[removeItem[:：].+?\]/g, '')
+            .replace(/\[addKnowledge[:：].+?\]/g, '')
+            .replace(/\[region[:：].+?\]/g, '')
+            .trim();
+
+        return updates;
+    },
+
+    // 套用狀態更新
+    applyStatusUpdates(updates) {
+        const c = GameState.character;
+        if (!c) return;
+
+        if (updates.health) c.health = updates.health;
+        if (updates.mood) c.mood = updates.mood;
+        if (updates.currency !== undefined) c.currency = updates.currency;
+        if (updates.abilityStatus) c.abilityStatus = updates.abilityStatus;
+        if (updates.region) c.region = updates.region;
+
+        if (updates.addItems) {
+            updates.addItems.forEach(item => {
+                if (!c.items.includes(item)) c.items.push(item);
+            });
+        }
+        if (updates.removeItems) {
+            c.items = c.items.filter(item => !updates.removeItems.includes(item));
+        }
+        if (updates.addKnowledge) {
+            updates.addKnowledge.forEach(k => {
+                if (!c.knowledge.includes(k)) c.knowledge.push(k);
+            });
+        }
+    },
+
+    // 上下文壓縮：保留 system + 最近 N 輪對話
+    compressContext(messages, maxPairs = 8) {
+        if (messages.length <= maxPairs * 2) return messages;
+
+        const systemMsgs = messages.filter(m => m.role === 'system');
+        const nonSystem = messages.filter(m => m.role !== 'system');
+
+        // 保留最近 maxPairs 輪（user+assistant）
+        const recent = nonSystem.slice(-maxPairs * 2);
+
+        // 加入摘要提示
+        const summary = {
+            role: 'user',
+            content: '[系統提示：以下為之前對話的摘要，請繼續故事]'
+        };
+
+        return [...systemMsgs, summary, ...recent];
+    },
+
+    // 清除標記後的文字（用於顯示）
+    cleanResponse(text) {
+        return text
+            .replace(/\[health[:：].+?\]/g, '')
+            .replace(/\[mood[:：].+?\]/g, '')
+            .replace(/\[currency[:：].+?\]/g, '')
+            .replace(/\[ability[:：].+?\]/g, '')
+            .replace(/\[addItem[:：].+?\]/g, '')
+            .replace(/\[removeItem[:：].+?\]/g, '')
+            .replace(/\[addKnowledge[:：].+?\]/g, '')
+            .replace(/\[region[:：].+?\]/g, '')
+            .trim();
     }
 };
 
@@ -76,12 +228,14 @@ const GameState = {
 const AI = {
     async chat(messages) {
         const { apiProvider, apiKey, ollamaUrl, model } = GameState.settings;
+        // 上下文壓縮
+        const compressed = GameEngine.compressContext(messages);
         if (apiProvider === 'ollama') {
-            return this.chatOllama(messages, ollamaUrl);
+            return this.chatOllama(compressed, ollamaUrl);
         } else if (apiProvider === 'gemini') {
-            return this.chatGemini(messages, apiKey, model);
+            return this.chatGemini(compressed, apiKey, model);
         } else {
-            return this.chatOpenAI(messages, apiKey, model);
+            return this.chatOpenAI(compressed, apiKey, model);
         }
     },
 
@@ -108,7 +262,6 @@ const AI = {
     },
 
     async chatGemini(messages, apiKey, model) {
-        // Convert OpenAI format to Gemini format
         const contents = [];
         let systemInstruction = '';
 
@@ -211,7 +364,7 @@ const AI = {
 
     async gameChat(userMessage) {
         const messages = [
-            { role: 'system', content: this.getSystemPrompt() + '\n\n' + this.getCharacterContext() },
+            { role: 'system', content: this.getSystemPrompt() + '\n\n' + this.getCharacterContext() + '\n\n' + this.getStatusTagInstructions() },
             ...GameState.messages,
             { role: 'user', content: userMessage },
         ];
@@ -222,9 +375,28 @@ const AI = {
         const messages = [
             { role: 'system', content: this.getSystemPrompt() + '\n\n' + this.getCharacterContext() },
             ...GameState.messages,
-            { role: 'user', content: '角色已死亡。撰寫一生故事（500-1000字）：開場、成長、轉折、冒險、結局、遺產。然後提供合併判定。' },
+            { role: 'user', content: '角色已死亡。請撰寫這個角色一生的故事（500-1000字），包含：開場（你是誰）、成長、轉折、冒險、結局、遺產。\n\n然後在最後一行提供合併判定，格式如下：\n[合併判定：已合併至正史] 或 [合併判定：化為殘響]' },
         ];
         return this.chat(messages);
+    },
+
+    getStatusTagInstructions() {
+        return `狀態標記系統（在玩家不可見的層面使用）：
+當角色狀態改變時，在回應中嵌入以下標記（玩家看到的文字中不會顯示這些標記）：
+- 健康改變：[health:良好/受傷/重傷/生病/瀕死]
+- 情緒改變：[mood:平靜/緊張/憤怒/悲傷/恐懼/絕望/瘋狂]
+- 資金改變：[currency:數字]
+- 能力覺醒：[ability:微覺醒/能力者]
+- 獲得物品：[addItem:物品名稱]
+- 失去物品：[removeItem:物品名稱]
+- 獲得資訊：[addKnowledge:資訊內容]
+- 移動到新區域：[region:地域名稱]
+- 角色死亡時：使用「斷氣」「死了」「消逝」「失去意識」等詞彙描述死亡場景。
+
+規則：
+1. 每次回應最多嵌入2-3個標記
+2. 標記融入敘事中，玩家不會直接看到標記格式
+3. 角色瀕死時描述要具體但不血腥`;
     },
 
     getSystemPrompt() {
@@ -270,43 +442,30 @@ const AI = {
 const DecayEngine = {
     uid: 0,
 
-    // 計算理智值（從角色狀態）
     calcSanity() {
         const c = GameState.character;
         if (!c) return 100;
-
         let san = 100;
-
-        // 健康
         if (c.health === '受傷') san -= 15;
         else if (c.health === '重傷') san -= 30;
         else if (c.health === '生病') san -= 10;
         else if (c.health === '瀕死') san -= 50;
-
-        // 情緒
         if (c.mood === '緊張') san -= 5;
         else if (c.mood === '憤怒') san -= 10;
         else if (c.mood === '悲傷') san -= 10;
         else if (c.mood === '恐懼') san -= 20;
         else if (c.mood === '絕望') san -= 30;
         else if (c.mood === '瘋狂') san -= 50;
-
-        // 能力
         if (c.abilityStatus === '微覺醒') san -= 5;
         else if (c.abilityStatus === '能力者') san -= 15;
-
-        // 對話次數
         san -= Math.min(GameState.messages.length * 2, 20);
-
         return Math.max(0, Math.min(100, san));
     },
 
-    // 主渲染函數
     render(san) {
-        const d = (100 - san) / 100; // decay ratio 0-1
+        const d = (100 - san) / 100;
         const screen = document.querySelector('.screen.active');
         if (!screen) return;
-
         let dl = screen.querySelector('.decay-layer');
         if (!dl) {
             dl = document.createElement('div');
@@ -314,8 +473,6 @@ const DecayEngine = {
             screen.appendChild(dl);
         }
         dl.innerHTML = '';
-
-        // Parchment darkening
         const dk = d * 38, rd = d * 18;
         screen.style.background = [
             'repeating-linear-gradient(0deg,transparent 0,transparent 20px,rgba(20,9,0,' + (.022 + d * .055) + ') 20px,rgba(20,9,0,' + (.022 + d * .055) + ') 21px)',
@@ -324,22 +481,12 @@ const DecayEngine = {
             'radial-gradient(ellipse at 83% 88%,rgba(' + (136 + rd) + ',' + (86 - dk * .5) + ',' + (22 - dk * .8) + ',' + (.45 + d * .15) + ') 0%,transparent 36%)',
             'radial-gradient(ellipse at 50% 50%,rgb(' + (242 - dk) + ',' + (230 - dk * 1.1) + ',' + (198 - dk * 2) + ') 0%,rgb(' + (216 - dk * .9) + ',' + (192 - dk) + ',' + (126 - dk * 1.4) + ') 52%,rgb(' + (176 - dk * .6) + ',' + (138 - dk * .8) + ',' + (54 - dk * .5) + ') 100%)'
         ].join(',');
-
-        // Vignette
         const vd = document.createElement('div');
         vd.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:21;background:radial-gradient(ellipse at 50% 50%,transparent 0%,transparent ' + Math.max(4, 68 - d * 65) + '%,rgba(6,2,0,' + d * .88 + ') 100%)';
         dl.appendChild(vd);
-
-        // Tears
         if (d > .16) dl.appendChild(this.makeTears(d));
-
-        // Burns
         if (d > .26) dl.appendChild(this.makeBurns(d));
-
-        // Entity
         if (d > .72) dl.appendChild(this.makeEntity(d));
-
-        // Text effects
         const nb = document.getElementById('narr-container');
         if (nb) {
             if (d > .52) {
@@ -351,8 +498,6 @@ const DecayEngine = {
                 nb.style.color = '';
             }
         }
-
-        // Flicker
         if (d > .7) {
             screen.style.animation = 'flicker ' + Math.max(.38, 2.4 - d * 2) + 's step-end infinite';
         } else {
@@ -360,7 +505,6 @@ const DecayEngine = {
         }
     },
 
-    // SVG helpers
     mkSvg() {
         const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
         s.setAttribute('width', '100%');
@@ -390,7 +534,6 @@ const DecayEngine = {
         return e;
     },
 
-    // Tear point generator
     tpts(n, mx, sd) {
         const r = [];
         for (let i = 0; i <= n; i++) {
@@ -406,16 +549,12 @@ const DecayEngine = {
         const svg = this.mkSvg();
         svg.style.zIndex = '22';
         const col = 'rgb(5,2,0)';
-
-        // TOP
         let dep = Math.min(20, (d - .16) / .84 * 22);
         let pts = this.tpts(22, dep, 1.23);
         let path = 'M 0,0 ';
         pts.forEach(p => { path += 'L ' + (p.t * 100) + ',' + p.v + ' '; });
         path += 'L 100,0 Z';
         svg.appendChild(this.mkPath(path, col, .92));
-
-        // BOTTOM
         if (d > .30) {
             dep = Math.min(18, (d - .30) / .70 * 20);
             pts = this.tpts(22, dep, 2.71);
@@ -424,8 +563,6 @@ const DecayEngine = {
             path += 'L 100,100 Z';
             svg.appendChild(this.mkPath(path, col, .86));
         }
-
-        // LEFT
         if (d > .43) {
             dep = Math.min(14, (d - .43) / .57 * 16);
             pts = this.tpts(18, dep, 3.14);
@@ -434,8 +571,6 @@ const DecayEngine = {
             path += 'L 0,100 Z';
             svg.appendChild(this.mkPath(path, col, .78));
         }
-
-        // RIGHT
         if (d > .56) {
             dep = Math.min(12, (d - .56) / .44 * 14);
             pts = this.tpts(18, dep, 4.67);
@@ -444,8 +579,6 @@ const DecayEngine = {
             path += 'L 100,100 Z';
             svg.appendChild(this.mkPath(path, col, .72));
         }
-
-        // CORNERS
         if (d > .63) {
             const cs = Math.min(20, (d - .63) / .37 * 24);
             const corners = [
@@ -456,7 +589,6 @@ const DecayEngine = {
             ];
             corners.forEach(c => { svg.appendChild(this.mkPath(c, 'rgb(3,1,0)', .95)); });
         }
-
         return svg;
     },
 
@@ -465,7 +597,6 @@ const DecayEngine = {
         svg.setAttribute('width', '100%');
         svg.setAttribute('height', '100%');
         svg.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:19;';
-
         const id = 'bf' + (++this.uid);
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         const flt = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
@@ -475,25 +606,20 @@ const DecayEngine = {
         flt.appendChild(fb);
         defs.appendChild(flt);
         svg.appendChild(defs);
-
         const cnt = Math.floor((d - .26) / .74 * 11) + 1;
         const intensity = (d - .26) / .74;
-
         for (let i = 0; i < cnt; i++) {
             const cx = 12 + (i * 37.3 + 4.1) % 76;
             const cy = 12 + (i * 53.7 + 9.3) % 76;
             const rx = 2.5 + (i * 7.2) % 5;
             const ry = rx * (.38 + (i * 3.1 % 6) / 10);
             const op = .08 + intensity * .12;
-
             const e1 = this.mkEll(cx, cy, rx * 1.6, ry * 1.6, 'rgb(8,3,0)', op * .7);
             e1.setAttribute('filter', 'url(#' + id + ')');
             svg.appendChild(e1);
             svg.appendChild(this.mkEll(cx, cy, rx, ry, 'rgb(4,1,0)', .16 + intensity * .22));
             svg.appendChild(this.mkEll(cx, cy, rx * .45, ry * .45, 'rgb(2,0,0)', .28 + intensity * .32));
         }
-
-        // Blood drips at high decay
         if (d > .52) {
             for (let j = 0; j < 4; j++) {
                 const dx = 18 + j * 20 + (j * 7.3) % 8;
@@ -506,7 +632,6 @@ const DecayEngine = {
                 svg.appendChild(drip);
             }
         }
-
         return svg;
     },
 
@@ -514,7 +639,6 @@ const DecayEngine = {
         const svg = this.mkSvg();
         svg.style.zIndex = '23';
         svg.style.animation = 'shadowPulse 3.2s ease-in-out infinite';
-
         const id = 'ef' + (++this.uid);
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         const flt = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
@@ -524,10 +648,7 @@ const DecayEngine = {
         flt.appendChild(fb);
         defs.appendChild(flt);
         svg.appendChild(defs);
-
         const op = (d - .72) / .28 * .42;
-
-        // Body silhouette
         const body = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         body.setAttribute('d',
             'M 86,100 C 84,90 80,88 82,81 C 84,74 90,73 89,67' +
@@ -539,15 +660,12 @@ const DecayEngine = {
         body.setAttribute('fill-opacity', op);
         body.setAttribute('filter', 'url(#' + id + ')');
         svg.appendChild(body);
-
-        // Eyes at very low sanity
         if (d > .87) {
             const eop = Math.min(1, (d - .87) / .13 * .9);
             [85, 88].forEach(ex => {
                 svg.appendChild(this.mkEll(ex, 52.5, .55, .38, 'rgb(160,14,14)', eop * .82));
             });
         }
-
         return svg;
     }
 };
@@ -565,13 +683,11 @@ const UI = {
     },
 
     bindEvents() {
-        // Provider 切換
         document.getElementById('inp-provider').addEventListener('change', async (e) => {
             const provider = e.target.value;
             const isOllama = provider === 'ollama';
             document.getElementById('ollama-url-fld').style.display = isOllama ? 'block' : 'none';
             document.getElementById('api-key-fld').style.display = isOllama ? 'none' : 'block';
-
             const modelSelect = document.getElementById('inp-model');
             if (provider === 'gemini') {
                 modelSelect.innerHTML = `
@@ -590,30 +706,56 @@ const UI = {
             }
         });
 
-        // 開始遊戲
         document.getElementById('start-btn').addEventListener('click', () => this.startGame());
 
-        // 送出
         document.getElementById('btn-send').addEventListener('click', () => this.sendMessage());
         document.getElementById('user-input').addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 this.sendMessage();
             }
+            // 歷史指令：上/下箭頭
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                this.navigateHistory(-1);
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                this.navigateHistory(1);
+            }
         });
 
-        // 側邊欄按鈕
         document.getElementById('btn-export').addEventListener('click', () => this.exportStory());
         document.getElementById('btn-newgame').addEventListener('click', () => this.newGame());
         document.getElementById('btn-settings').addEventListener('click', () => this.gotoSetup());
 
-        // Modal
         document.getElementById('btn-close-modal').addEventListener('click', () => {
             document.getElementById('story-modal').classList.remove('active');
         });
         document.getElementById('btn-copy').addEventListener('click', () => this.copyStory());
         document.getElementById('btn-download').addEventListener('click', () => this.downloadStory());
 
+        // 死亡 Modal 按鈕
+        document.getElementById('btn-death-story').addEventListener('click', () => this.generateDeathStory());
+        document.getElementById('btn-death-newgame').addEventListener('click', () => this.newGame());
+        document.getElementById('btn-death-continue').addEventListener('click', () => {
+            document.getElementById('death-modal').classList.remove('active');
+        });
+    },
+
+    navigateHistory(dir) {
+        const input = document.getElementById('user-input');
+        const history = GameState.inputHistory;
+        if (history.length === 0) return;
+
+        GameState.historyIndex += dir;
+        if (GameState.historyIndex < 0) GameState.historyIndex = 0;
+        if (GameState.historyIndex >= history.length) {
+            GameState.historyIndex = history.length;
+            input.value = '';
+            return;
+        }
+        input.value = history[history.length - 1 - GameState.historyIndex];
     },
 
     gotoGame() {
@@ -664,21 +806,6 @@ const UI = {
         }
     },
 
-    updateOpenAIModels() {
-        const select = document.getElementById('inp-model');
-        select.innerHTML = '';
-        [
-            { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-            { value: 'gpt-4o', label: 'GPT-4o' },
-            { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-        ].forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m.value;
-            opt.textContent = m.label;
-            select.appendChild(opt);
-        });
-    },
-
     async testOllamaConnection(url) {
         try {
             const response = await fetch(`${url}/api/tags`, {
@@ -711,6 +838,9 @@ const UI = {
             GameState.sanity = DecayEngine.calcSanity();
             this.updateSanityUI(GameState.sanity);
             DecayEngine.render(GameState.sanity);
+            if (GameState.dead) {
+                document.getElementById('death-modal').classList.add('active');
+            }
         }
     },
 
@@ -720,22 +850,18 @@ const UI = {
             document.getElementById('err-msg').textContent = '請輸入你的名字';
             return;
         }
-
         const provider = document.getElementById('inp-provider').value;
         const apiKey = document.getElementById('inp-key').value.trim();
         const ollamaUrl = document.getElementById('inp-url').value.trim();
         const model = document.getElementById('inp-model').value;
-
         if ((provider === 'openai' || provider === 'gemini') && !apiKey) {
             document.getElementById('err-msg').textContent = '請輸入 API Key';
             return;
         }
-
         const btn = document.getElementById('start-btn');
         btn.disabled = true;
         btn.textContent = 'AI 正在生成你的世界...';
         document.getElementById('err-msg').textContent = '';
-
         if (provider === 'ollama') {
             const test = await this.testOllamaConnection(ollamaUrl);
             if (!test.success) {
@@ -745,9 +871,7 @@ const UI = {
                 return;
             }
         }
-
         GameState.settings = { playerName: name, apiProvider: provider, apiKey, ollamaUrl, model };
-
         try {
             const response = await AI.generateCharacter(name);
             this.handleCharacterResponse(response);
@@ -761,18 +885,13 @@ const UI = {
     handleCharacterResponse(response) {
         let character = null;
         let openingNarrative = response;
-
-        // Strip markdown code blocks (```json ... ``` or ``` ... ```)
         let cleaned = response.replace(/```(?:json)?\s*\n?/g, '').replace(/```\s*\n?/g, '');
-
         try {
             const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 character = JSON.parse(jsonMatch[0]);
-                // 開場敘事是 JSON 之後的部分
                 const jsonEnd = cleaned.indexOf(jsonMatch[0]) + jsonMatch[0].length;
                 openingNarrative = cleaned.substring(jsonEnd).trim();
-                // If narrative is empty, use text before JSON
                 if (!openingNarrative) {
                     openingNarrative = cleaned.substring(0, cleaned.indexOf(jsonMatch[0])).trim();
                 }
@@ -780,7 +899,6 @@ const UI = {
         } catch (e) {
             console.warn('Parse failed:', e);
         }
-
         if (!character) {
             character = {
                 name: GameState.settings.playerName,
@@ -791,26 +909,22 @@ const UI = {
                 items: ['基本衣物'], knowledge: [],
             };
         }
-
         GameState.character = character;
         GameState.started = true;
+        GameState.dead = false;
         GameState.messages = [{ role: 'assistant', content: openingNarrative }];
         GameState.sanity = 100;
         GameState.save();
-
         this.gotoGame();
         this.updateCharacterPanel();
         this.updateSanityUI(100);
         DecayEngine.render(100);
-
-        // 渲染開場
         this.renderNarrative(openingNarrative);
     },
 
     updateCharacterPanel() {
         const c = GameState.character;
         if (!c) return;
-
         document.getElementById('sidebar-name').textContent = '⚔ ' + c.name;
         document.getElementById('sb-gender').textContent = c.gender;
         document.getElementById('sb-age').textContent = c.age;
@@ -823,16 +937,10 @@ const UI = {
         document.getElementById('sb-currency').textContent = c.currency + ' 阿爾納';
         document.getElementById('sb-ability').textContent =
             c.abilityStatus + (c.abilityType !== '無' ? '（' + c.abilityType + '）' : '');
-
-        // 健康條
         const hpMap = { '良好': 80, '受傷': 50, '重傷': 25, '生病': 60, '瀕死': 10 };
         document.getElementById('sb-health-bar').style.width = (hpMap[c.health] || 80) + '%';
-
-        // 情緒條
         const emoMap = { '平靜': 70, '緊張': 50, '憤怒': 40, '悲傷': 45, '恐懼': 30, '絕望': 15, '瘋狂': 10 };
         document.getElementById('sb-emo-bar').style.width = (emoMap[c.mood] || 70) + '%';
-
-        // 物品
         const itemsEl = document.getElementById('sb-items');
         itemsEl.innerHTML = '';
         c.items.forEach(item => {
@@ -841,8 +949,6 @@ const UI = {
             div.textContent = item;
             itemsEl.appendChild(div);
         });
-
-        // 資訊
         const knowEl = document.getElementById('sb-knowledge');
         knowEl.innerHTML = '';
         c.knowledge.forEach(k => {
@@ -851,8 +957,6 @@ const UI = {
             div.textContent = k;
             knowEl.appendChild(div);
         });
-
-        // Era badge
         document.getElementById('tb-era').textContent = c.era + ' · ' + c.region;
         document.getElementById('scene-tag').textContent = '─── ' + c.region + ' · ' + c.era + ' ───';
     },
@@ -860,12 +964,9 @@ const UI = {
     renderNarrative(text) {
         const container = document.getElementById('narr-container');
         container.innerHTML = '';
-
-        // 解析選擇
         const choiceMatch = text.match(/(?:選擇|options?|choices?)[:：]?\s*\n([\s\S]*?)$/i);
         let narrative = text;
         let choices = [];
-
         if (choiceMatch) {
             narrative = text.substring(0, text.indexOf(choiceMatch[0])).trim();
             const choiceText = choiceMatch[1];
@@ -877,14 +978,10 @@ const UI = {
                 }
             });
         }
-
-        // 敘事
         const p = document.createElement('p');
         p.className = 'narr-body';
         p.textContent = narrative;
         container.appendChild(p);
-
-        // 選擇
         const choiceList = document.getElementById('choice-list');
         const choiceItems = document.getElementById('choice-items');
         if (choices.length > 0) {
@@ -903,8 +1000,6 @@ const UI = {
         } else {
             choiceList.style.display = 'none';
         }
-
-        // 滾動
         document.getElementById('narr-area').scrollTop = 999999;
     },
 
@@ -913,14 +1008,18 @@ const UI = {
         const message = input.value.trim();
         if (!message) return;
 
-        input.value = '';
+        // 記錄歷史
+        if (message && GameState.inputHistory[GameState.inputHistory.length - 1] !== message) {
+            GameState.inputHistory.push(message);
+        }
+        GameState.historyIndex = -1;
 
+        input.value = '';
         GameState.messages.push({ role: 'user', content: message });
 
         document.getElementById('btn-send').disabled = true;
         document.getElementById('user-input').disabled = true;
 
-        // 顯示載入
         const container = document.getElementById('narr-container');
         const loading = document.createElement('p');
         loading.className = 'narr-note';
@@ -935,13 +1034,27 @@ const UI = {
             const loadEl = document.getElementById('loading-indicator');
             if (loadEl) loadEl.remove();
 
+            // 解析狀態更新
+            const updates = GameEngine.parseStatusUpdates(response);
+            GameEngine.applyStatusUpdates(updates);
+
+            const displayText = updates.cleanText || GameEngine.cleanResponse(response);
+
             GameState.messages.push({ role: 'assistant', content: response });
             GameState.sanity = DecayEngine.calcSanity();
             GameState.save();
 
+            this.updateCharacterPanel();
             this.updateSanityUI(GameState.sanity);
             DecayEngine.render(GameState.sanity);
-            this.renderNarrative(response);
+            this.renderNarrative(displayText);
+
+            // 偵測死亡
+            if (GameEngine.detectDeath(response)) {
+                GameState.dead = true;
+                GameState.save();
+                setTimeout(() => this.showDeathModal(), 1500);
+            }
 
         } catch (error) {
             const loadEl = document.getElementById('loading-indicator');
@@ -963,9 +1076,48 @@ const UI = {
         container.innerHTML = '';
         GameState.messages.forEach(msg => {
             if (msg.role === 'assistant') {
-                this.renderNarrative(msg.content);
+                const displayText = GameEngine.cleanResponse(msg.content);
+                this.renderNarrative(displayText);
             }
         });
+    },
+
+    // ── 死亡流程 ──
+
+    showDeathModal() {
+        document.getElementById('death-name').textContent = GameState.character?.name || '未知';
+        document.getElementById('death-modal').classList.add('active');
+    },
+
+    async generateDeathStory() {
+        document.getElementById('btn-death-story').disabled = true;
+        document.getElementById('btn-death-story').textContent = '撰寫中...';
+        document.getElementById('death-status').textContent = 'AI 正在撰寫你角色的一生...';
+
+        try {
+            const story = await AI.generateStory();
+            GameState.story = story;
+            GameState.save();
+
+            // 判定合併結果
+            const isMerged = story.includes('已合併至正史') || story.includes('合併');
+            const resultEl = document.getElementById('death-result');
+            if (isMerged) {
+                resultEl.innerHTML = '<span class="result-merge">✅ 已合併至正史</span>';
+            } else {
+                resultEl.innerHTML = '<span class="result-echo">⚠️ 化為殘響</span>';
+            }
+
+            document.getElementById('death-story-content').textContent = story;
+            document.getElementById('death-story-section').style.display = 'block';
+            document.getElementById('death-status').textContent = '';
+
+        } catch (error) {
+            document.getElementById('death-status').textContent = '故事生成失敗：' + error.message;
+        }
+
+        document.getElementById('btn-death-story').disabled = false;
+        document.getElementById('btn-death-story').textContent = '📜 撰寫一生故事';
     },
 
     async exportStory() {
@@ -975,15 +1127,12 @@ const UI = {
         loading.textContent = '※ AI 正在撰寫你角色的一生...';
         loading.id = 'story-loading';
         container.appendChild(loading);
-
         try {
             const story = await AI.generateStory();
             GameState.story = story;
             GameState.save();
-
             const loadEl = document.getElementById('story-loading');
             if (loadEl) loadEl.remove();
-
             document.getElementById('story-content').textContent = story;
             document.getElementById('story-modal').classList.add('active');
         } catch (error) {
@@ -1019,6 +1168,10 @@ const UI = {
             GameState.reset();
             document.getElementById('game-screen').classList.remove('active');
             document.getElementById('setup-screen').classList.add('active');
+            document.getElementById('death-modal').classList.remove('active');
+            document.getElementById('story-modal').classList.remove('active');
+            document.getElementById('death-story-section').style.display = 'none';
+            document.getElementById('death-result').innerHTML = '';
             this.currentScreen = 'setup';
             document.getElementById('narr-container').innerHTML = '';
             document.getElementById('user-input').value = '';
