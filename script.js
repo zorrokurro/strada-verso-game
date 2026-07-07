@@ -731,9 +731,18 @@ const UI = {
 
         document.getElementById('btn-close-modal').addEventListener('click', () => {
             document.getElementById('story-modal').classList.remove('active');
+            document.getElementById('github-section').style.display = 'none';
         });
         document.getElementById('btn-copy').addEventListener('click', () => this.copyStory());
         document.getElementById('btn-download').addEventListener('click', () => this.downloadStory());
+        document.getElementById('btn-github').addEventListener('click', () => {
+            const section = document.getElementById('github-section');
+            section.style.display = section.style.display === 'none' ? 'block' : 'none';
+            // 載入已儲存的 token
+            const savedToken = localStorage.getItem('strada-gh-token');
+            if (savedToken) document.getElementById('inp-gh-token').value = savedToken;
+        });
+        document.getElementById('btn-gh-publish').addEventListener('click', () => this.publishToGitHub());
 
         // 死亡 Modal 按鈕
         document.getElementById('btn-death-story').addEventListener('click', () => this.generateDeathStory());
@@ -1161,6 +1170,76 @@ const UI = {
         a.download = name + '-故事.md';
         a.click();
         URL.revokeObjectURL(url);
+    },
+
+    async publishToGitHub() {
+        const token = document.getElementById('inp-gh-token').value.trim();
+        const repo = document.getElementById('inp-gh-repo').value.trim();
+        const statusEl = document.getElementById('gh-status');
+
+        if (!token) {
+            statusEl.textContent = '請輸入 GitHub Token';
+            statusEl.style.color = 'var(--blood)';
+            return;
+        }
+        if (!repo || !repo.includes('/')) {
+            statusEl.textContent = '請輸入有效的倉庫（user/repo 格式）';
+            statusEl.style.color = 'var(--blood)';
+            return;
+        }
+
+        const story = document.getElementById('story-content').textContent;
+        const c = GameState.character;
+        const title = `📜 ${c?.name || '未知'}的一生 — ${c?.era || ''} · ${c?.region || ''}`;
+
+        const body = `# ${c?.name || '未知'}的一生\n\n` +
+            `> 時代：${c?.era || '未知'}（${c?.eraYear || ''}）\n` +
+            `> 地域：${c?.region || '未知'}\n` +
+            `> 職業：${c?.occupation || '未知'}\n` +
+            `> 能力：${c?.abilityStatus || '普通人'}\n\n` +
+            `---\n\n` +
+            story + '\n\n' +
+            `---\n\n*由斯特拉達·維爾索 AI GM 生成*`;
+
+        const btn = document.getElementById('btn-gh-publish');
+        btn.disabled = true;
+        btn.textContent = '發佈中...';
+        statusEl.textContent = '';
+
+        try {
+            const response = await fetch(`https://api.github.com/repos/${repo}/issues`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    title: title,
+                    body: body,
+                    labels: ['角色故事', c?.era || '未知時代'],
+                }),
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.message || `HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            statusEl.innerHTML = `✅ <a href="${data.html_url}" target="_blank" style="color:var(--gold)">已發佈到 GitHub</a>`;
+            statusEl.style.color = '';
+
+            // 儲存 token
+            localStorage.setItem('strada-gh-token', token);
+
+        } catch (error) {
+            statusEl.textContent = '發佈失敗：' + error.message;
+            statusEl.style.color = 'var(--blood)';
+        }
+
+        btn.disabled = false;
+        btn.textContent = '🚀 發佈';
     },
 
     newGame() {

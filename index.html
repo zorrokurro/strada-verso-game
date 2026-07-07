@@ -511,7 +511,22 @@ html,body{
     <div class="modal-btns">
       <button class="modal-btn" id="btn-copy">📋 複製</button>
       <button class="modal-btn secondary" id="btn-download">💾 下載</button>
+      <button class="modal-btn secondary" id="btn-github">📤 發佈到 GitHub</button>
       <button class="modal-btn secondary" id="btn-close-modal">✕ 關閉</button>
+    </div>
+    <div class="github-section" id="github-section" style="display:none">
+      <div class="death-divider"></div>
+      <div class="fld" style="margin:10px 0">
+        <label class="fld-lbl">GitHub Token</label>
+        <input type="password" class="parch-in" id="inp-gh-token" placeholder="ghp_xxxx 或 github_pat_xxxx">
+        <div class="fld-hint">從 github.com/settings/tokens 取得（需 repo 權限）</div>
+      </div>
+      <div class="fld" style="margin:10px 0">
+        <label class="fld-lbl">目標倉庫</label>
+        <input type="text" class="parch-in" id="inp-gh-repo" value="zorrokurro/strada-verso-game" placeholder="user/repo">
+      </div>
+      <button class="modal-btn" id="btn-gh-publish">🚀 發佈</button>
+      <div class="death-status" id="gh-status"></div>
     </div>
   </div>
 </div>
