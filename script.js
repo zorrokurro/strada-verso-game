@@ -251,7 +251,7 @@ const AI = {
                 model: model,
                 messages: messages,
                 temperature: 0.85,
-                max_tokens: 1500,
+                max_tokens: 4000,
             }),
         });
         if (!response.ok) {
@@ -281,7 +281,7 @@ const AI = {
             contents: contents,
             generationConfig: {
                 temperature: 0.85,
-                maxOutputTokens: 1500,
+                maxOutputTokens: 4000,
             }
         };
 
@@ -772,6 +772,9 @@ const UI = {
         document.getElementById('setup-screen').classList.remove('active');
         document.getElementById('game-screen').classList.add('active');
         this.currentScreen = 'game';
+        document.getElementById('user-input').disabled = false;
+        document.getElementById('btn-send').disabled = false;
+        document.getElementById('user-input').focus();
         DecayEngine.render(GameState.sanity);
     },
 
@@ -1075,11 +1078,11 @@ const UI = {
             errP.style.color = 'var(--blood)';
             errP.textContent = '錯誤：' + error.message;
             container.appendChild(errP);
+        } finally {
+            document.getElementById('btn-send').disabled = false;
+            document.getElementById('user-input').disabled = false;
+            document.getElementById('user-input').focus();
         }
-
-        document.getElementById('btn-send').disabled = false;
-        document.getElementById('user-input').disabled = false;
-        document.getElementById('user-input').focus();
     },
 
     renderMessages() {
