@@ -156,15 +156,16 @@ html,body{
 
 .char-tag{
   font-family:'Press Start 2P',monospace;
-  font-size:7px;letter-spacing:1px;color:var(--ink);
-  text-align:center;padding:7px 4px;
+  font-size:8px;letter-spacing:1px;color:var(--ink);
+  text-align:center;padding:8px 4px;
   border:2px solid var(--ink);
-  background:rgba(20,9,0,.06);margin-bottom:9px;
+  background:rgba(20,9,0,.08);margin-bottom:9px;
+  text-shadow:1px 1px 0 rgba(255,255,255,.3);
 }
 
 .sec{
   font-family:'Press Start 2P',monospace;
-  font-size:5px;letter-spacing:1.5px;color:var(--walnut);
+  font-size:6px;letter-spacing:1.5px;color:var(--walnut);
   margin:9px 0 5px;display:flex;align-items:center;gap:4px;
 }
 .sec::before{content:'►';font-size:5px}
@@ -174,12 +175,12 @@ html,body{
   display:flex;justify-content:space-between;align-items:center;
   padding:3px 0;border-bottom:1px dashed rgba(20,9,0,.14);
 }
-.slbl{font-family:'IM Fell English',serif;font-size:12px;color:var(--walnut)}
-.sval{font-family:'VT323',monospace;font-size:16px;color:var(--ink)}
+.slbl{font-family:'IM Fell English',serif;font-size:13px;color:var(--walnut);font-weight:bold}
+.sval{font-family:'VT323',monospace;font-size:18px;color:var(--ink);text-shadow:1px 1px 0 rgba(255,255,255,.3)}
 
 .bar-g{margin:5px 0}
 .bar-lbl{
-  font-family:'Press Start 2P',monospace;font-size:5px;color:var(--walnut);
+  font-family:'Press Start 2P',monospace;font-size:6px;color:var(--walnut);
   display:flex;justify-content:space-between;margin-bottom:3px;
 }
 .bar-track{height:9px;border:2px solid var(--ink);background:rgba(20,9,0,.12)}
@@ -189,11 +190,12 @@ html,body{
 .b-emo{background:repeating-linear-gradient(90deg,#28582a 0,#28582a 5px,#184818 5px,#184818 7px)}
 
 .ichip{
-  font-family:'IM Fell English',serif;font-size:11px;color:var(--ink);
-  padding:3px 6px 3px 16px;position:relative;margin:2px 0;
+  font-family:'IM Fell English',serif;font-size:13px;color:var(--ink);
+  padding:4px 6px 4px 16px;position:relative;margin:2px 0;
   border-bottom:1px solid rgba(20,9,0,.12);
+  text-shadow:1px 1px 0 rgba(255,255,255,.25);
 }
-.ichip::before{content:'◆';position:absolute;left:4px;font-size:7px;color:var(--gold);top:50%;transform:translateY(-50%)}
+.ichip::before{content:'◆';position:absolute;left:4px;font-size:8px;color:var(--gold);top:50%;transform:translateY(-50%)}
 
 .sb-btns{display:flex;gap:6px;padding-top:10px;margin-top:auto}
 .sbbtn{
@@ -230,13 +232,15 @@ html,body{
 .narr-area{flex:1;padding:22px 28px;overflow-y:auto;position:relative}
 
 .scene-tag{
-  font-family:'VT323',monospace;font-size:15px;color:var(--p3);
+  font-family:'VT323',monospace;font-size:17px;color:var(--walnut);
   display:block;margin-bottom:14px;
   border-left:3px solid var(--gold);padding-left:8px;
+  text-shadow:1px 1px 0 rgba(255,255,255,.2);
 }
 
 .narr-body{
-  font-family:'IM Fell English',serif;font-size:15px;line-height:2;color:var(--ink);
+  font-family:'IM Fell English',serif;font-size:17px;line-height:2;color:var(--ink);
+  text-shadow:1px 1px 0 rgba(255,255,255,.2);
 }
 
 .choice-list{
@@ -254,12 +258,12 @@ html,body{
   cursor:pointer;transition:background .15s;
 }
 .choice-item:hover{background:rgba(196,144,8,.12)}
-.c-num{font-family:'Press Start 2P',monospace;font-size:6px;color:var(--gold);margin-top:2px;flex-shrink:0}
-.c-txt{font-family:'IM Fell English',serif;font-size:14px;color:var(--ink);line-height:1.6}
+.c-num{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--gold);margin-top:2px;flex-shrink:0}
+.c-txt{font-family:'IM Fell English',serif;font-size:15px;color:var(--ink);line-height:1.6;text-shadow:1px 1px 0 rgba(255,255,255,.2)}
 
 .narr-note{
   font-family:'IM Fell English',serif;font-style:italic;
-  font-size:13px;color:var(--p3);margin-top:14px;
+  font-size:14px;color:var(--walnut);margin-top:14px;
   padding:8px 12px;border-left:2px dashed var(--p1);
 }
 
