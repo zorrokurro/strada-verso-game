@@ -66,6 +66,7 @@ const GameState = {
             apiKey: '',
             ollamaUrl: 'http://localhost:11434',
             model: 'gemini-2.5-flash',
+            discordWebhook: '',
         };
         this.character = null;
         this.messages = [];
@@ -880,7 +881,8 @@ const UI = {
                 return;
             }
         }
-        GameState.settings = { playerName: name, apiProvider: provider, apiKey, ollamaUrl, model };
+        const discordWebhook = document.getElementById('inp-discord').value.trim();
+        GameState.settings = { playerName: name, apiProvider: provider, apiKey, ollamaUrl, model, discordWebhook };
         try {
             const response = await AI.generateCharacter(name);
             this.handleCharacterResponse(response);
@@ -1098,6 +1100,46 @@ const UI = {
         document.getElementById('death-modal').classList.add('active');
     },
 
+    async sendToDiscord(story) {
+        const webhookUrl = GameState.settings?.discordWebhook;
+        if (!webhookUrl) return;
+
+        const c = GameState.character;
+        const title = `${c?.name || '未知'}的一生 — ${c?.era || ''} · ${c?.region || ''}`;
+
+        // Discord embed 限制 4096 字元，截斷故事
+        const maxStoryLen = 3500;
+        let truncatedStory = story;
+        if (story.length > maxStoryLen) {
+            truncatedStory = story.substring(0, maxStoryLen) + '\n\n...（故事過長，已截斷）';
+        }
+
+        const embed = {
+            title: '📜 ' + title,
+            description: truncatedStory,
+            color: 0x5a2c08,
+            fields: [
+                { name: '時代', value: c?.era || '未知', inline: true },
+                { name: '地域', value: c?.region || '未知', inline: true },
+                { name: '職業', value: c?.occupation || '未知', inline: true },
+                { name: '能力', value: c?.abilityStatus || '普通人', inline: true },
+                { name: '結局', value: story.includes('已合併至正史') ? '✅ 已合併至正史' : '⚠️ 化為殘響', inline: true },
+            ],
+            footer: { text: '斯特拉達·維爾索 AI GM' },
+            timestamp: new Date().toISOString(),
+        };
+
+        try {
+            await fetch(webhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ embeds: [embed] }),
+            });
+        } catch (e) {
+            console.error('Discord webhook failed:', e);
+        }
+    },
+
     async generateDeathStory() {
         document.getElementById('btn-death-story').disabled = true;
         document.getElementById('btn-death-story').textContent = '撰寫中...';
@@ -1120,6 +1162,9 @@ const UI = {
             document.getElementById('death-story-content').textContent = story;
             document.getElementById('death-story-section').style.display = 'block';
             document.getElementById('death-status').textContent = '';
+
+            // 自動發送到 Discord
+            this.sendToDiscord(story);
 
         } catch (error) {
             document.getElementById('death-status').textContent = '故事生成失敗：' + error.message;
