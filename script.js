@@ -1162,7 +1162,7 @@ const UI = {
         if (!webhookUrl) return;
 
         const c = GameState.character;
-        const title = `${c?.name || '未知'}的一生 — ${c?.era || ''} · ${c?.region || ''}`;
+        const title = `${c?.name || '未知'}的一生`;
 
         // Discord embed 限制 4096 字元，截斷故事
         const maxStoryLen = 3500;
@@ -1171,16 +1171,28 @@ const UI = {
             truncatedStory = story.substring(0, maxStoryLen) + '\n\n...（故事過長，已截斷）';
         }
 
+        // 移除合併判定標記，讓結局更乾淨
+        let cleanStory = truncatedStory
+            .replace(/\[合併判定：已合併至正史\]/g, '')
+            .replace(/\[合併判定：化為殘響\]/g, '')
+            .trim();
+
+        // 判定結局
+        let结局 = '⚠️ 化為殘響';
+        if (story.includes('已合併至正史') || story.includes('合併')) {
+           结局 = '✅ 已合併至正史';
+        }
+
         const embed = {
             title: '📜 ' + title,
-            description: truncatedStory,
-            color: 0x5a2c08,
+            description: cleanStory,
+            color: 0x000000,
             fields: [
                 { name: '時代', value: c?.era || '未知', inline: true },
                 { name: '地域', value: c?.region || '未知', inline: true },
                 { name: '職業', value: c?.occupation || '未知', inline: true },
                 { name: '能力', value: c?.abilityStatus || '普通人', inline: true },
-                { name: '結局', value: story.includes('已合併至正史') ? '✅ 已合併至正史' : '⚠️ 化為殘響', inline: true },
+                { name: '結局', value: 结局, inline: true },
             ],
             footer: { text: '斯特拉達·維爾索 AI GM' },
             timestamp: new Date().toISOString(),
