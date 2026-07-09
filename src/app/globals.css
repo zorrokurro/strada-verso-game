@@ -1,0 +1,604 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* ── Strada Verso 專屬設計 token ── */
+  --color-ink: var(--ink);
+  --color-p0: var(--p0);
+  --color-p1: var(--p1);
+  --color-p2: var(--p2);
+  --color-p3: var(--p3);
+  --color-walnut: var(--walnut);
+  --color-gold: var(--gold);
+  --color-blood: var(--blood);
+  --color-dark: var(--dark);
+
+  --font-pixel: var(--font-press-start, "Press Start 2P"), "Press Start 2P", monospace;
+  --font-pixel-num: var(--font-vt323, "VT323"), "VT323", monospace;
+  --font-pixelify: var(--font-pixelify, "Pixelify Sans"), "Pixelify Sans", monospace;
+  --font-body: var(--font-noto-serif-tc, "Noto Serif TC"), "Noto Serif TC", "Songti TC", "PingFang TC", serif;
+  --font-display: var(--font-im-fell, "IM Fell English"), "IM Fell English", "Noto Serif TC", serif;
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Strada Verso 配色（從原 demo 保留） */
+  --ink: #000000;
+  --p0: #f2e6c6;
+  --p1: #d8c07e;
+  --p2: #b08a36;
+  --p3: #222222;
+  --walnut: #1a1a1a;
+  --gold: #c49008;
+  --blood: #700e0e;
+  --dark: #08040a;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-color: var(--dark);
+    color: var(--p0);
+    font-family: var(--font-body);
+    overflow: hidden;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   Strada Verso UI 系統
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Parchment 羊皮紙紋理 ── */
+.parchment-bg {
+  background:
+    repeating-linear-gradient(0deg, transparent 0, transparent 20px, rgba(20,9,0,.022) 20px, rgba(20,9,0,.022) 21px),
+    repeating-linear-gradient(90deg, transparent 0, transparent 24px, rgba(20,9,0,.018) 24px, rgba(20,9,0,.018) 25px),
+    radial-gradient(ellipse at 18% 12%, rgba(176,120,38,.55) 0%, transparent 38%),
+    radial-gradient(ellipse at 83% 88%, rgba(136,86,22,.45) 0%, transparent 36%),
+    radial-gradient(ellipse at 50% 50%, var(--p0) 0%, var(--p1) 52%, var(--p2) 100%);
+}
+
+.parchment-bg-deep {
+  background:
+    repeating-linear-gradient(0deg, transparent 0, transparent 20px, rgba(20,9,0,.04) 20px, rgba(20,9,0,.04) 21px),
+    repeating-linear-gradient(90deg, transparent 0, transparent 24px, rgba(20,9,0,.03) 24px, rgba(20,9,0,.03) 25px),
+    radial-gradient(ellipse at 20% 10%, rgba(176,120,38,.7) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 90%, rgba(112,14,14,.3) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 50%, var(--p0) 0%, var(--p1) 60%, var(--p2) 100%);
+}
+
+.dark-bg {
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(112,14,14,.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(196,144,8,.1) 0%, transparent 50%),
+    linear-gradient(180deg, #0a0508 0%, #08040a 100%);
+}
+
+/* ── 像素邊框（從原 demo 移植並優化） ── */
+.pixel-frame {
+  position: relative;
+  border: 4px solid var(--ink);
+  box-shadow:
+    0 0 0 2px var(--gold),
+    0 0 0 5px var(--ink),
+    inset 0 0 0 1px rgba(255,210,80,.22),
+    5px 5px 0 rgba(20,9,0,.45);
+}
+
+.pixel-frame::before,
+.pixel-frame::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: var(--ink);
+  pointer-events: none;
+}
+.pixel-frame::before {
+  top: -5px;
+  left: -5px;
+  clip-path: polygon(0 0, 100% 0, 100% 28%, 28% 28%, 28% 100%, 0 100%);
+}
+.pixel-frame::after {
+  bottom: -5px;
+  right: -5px;
+  clip-path: polygon(72% 0, 100% 0, 100% 100%, 0 100%, 0 72%, 72% 72%);
+}
+
+/* 細緻版像素框（給小元件用） */
+.pixel-frame-thin {
+  position: relative;
+  border: 2px solid var(--ink);
+  box-shadow:
+    0 0 0 1px var(--gold),
+    0 0 0 3px var(--ink),
+    3px 3px 0 rgba(20,9,0,.35);
+}
+
+/* 黑色面板上用的像素框（亮色邊） */
+.pixel-frame-dark {
+  position: relative;
+  border: 3px solid var(--gold);
+  box-shadow:
+    0 0 0 1px var(--ink),
+    0 0 0 4px var(--gold),
+    inset 0 0 0 1px rgba(196,144,8,.3),
+    4px 4px 0 rgba(0,0,0,.6);
+}
+
+/* ── 像素分隔線 ── */
+.pixel-divider {
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ink) 0, var(--ink) 4px,
+    var(--gold) 4px, var(--gold) 7px,
+    var(--ink) 7px, var(--ink) 11px,
+    transparent 11px, transparent 15px
+  );
+}
+
+.pixel-divider-dark {
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--gold) 0, var(--gold) 4px,
+    var(--p0) 4px, var(--p0) 7px,
+    var(--gold) 7px, var(--gold) 11px,
+    transparent 11px, transparent 15px
+  );
+}
+
+/* ── 字體 utility ── */
+.font-pixel { font-family: var(--font-pixel); }
+.font-pixel-num { font-family: var(--font-pixel-num); }
+.font-pixelify { font-family: var(--font-pixelify); }
+.font-body-tc { font-family: var(--font-body); }
+.font-display { font-family: var(--font-display); }
+
+/* ── 文字層級（解決資訊層級亂的核心） ── */
+.text-eyebrow {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  letter-spacing: 2px;
+  line-height: 1.6;
+  color: var(--walnut);
+  text-transform: uppercase;
+}
+
+.text-eyebrow-light {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  letter-spacing: 2px;
+  line-height: 1.6;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.text-display-lg {
+  font-family: var(--font-pixel);
+  font-size: 28px;
+  letter-spacing: 3px;
+  line-height: 1.4;
+  color: var(--ink);
+  text-shadow: 3px 3px 0 rgba(196,144,8,.4);
+}
+
+.text-display-md {
+  font-family: var(--font-pixel);
+  font-size: 16px;
+  letter-spacing: 2px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.text-display-sm {
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  line-height: 1.8;
+  color: var(--ink);
+}
+
+.text-body-lead {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--p3);
+  letter-spacing: 0.5px;
+}
+
+.text-body-md {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--p3);
+}
+
+.text-body-sm {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--p3);
+}
+
+.text-stat-num {
+  font-family: var(--font-pixel-num);
+  font-size: 24px;
+  line-height: 1;
+  color: var(--ink);
+  letter-spacing: 1px;
+}
+
+.text-stat-label {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  letter-spacing: 1.5px;
+  color: var(--walnut);
+  text-transform: uppercase;
+}
+
+/* ── GM 對話樣式 ── */
+.gm-narrative {
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.85;
+  color: var(--walnut);
+  letter-spacing: 0.3px;
+}
+
+.gm-dialogue {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--blood);
+  letter-spacing: 0.3px;
+}
+
+.player-action {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--p0);
+  letter-spacing: 0.3px;
+}
+
+.system-msg {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+/* ── 可點擊關鍵字 ── */
+.keyword-chip {
+  display: inline;
+  background: rgba(196,144,8,.18);
+  border-bottom: 2px solid var(--gold);
+  padding: 0 4px;
+  color: var(--blood);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s ease;
+  border-radius: 2px;
+}
+.keyword-chip:hover {
+  background: rgba(196,144,8,.4);
+  color: var(--ink);
+}
+.keyword-chip::before {
+  content: '\25C8';
+  font-size: 10px;
+  margin-right: 2px;
+  opacity: .7;
+}
+
+/* ── 按鈕 ── */
+.pixel-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--ink);
+  color: var(--p0);
+  border: 0;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .12s ease;
+  box-shadow:
+    0 0 0 2px var(--gold),
+    0 0 0 4px var(--ink),
+    4px 4px 0 rgba(20,9,0,.5);
+}
+.pixel-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow:
+    0 0 0 2px var(--gold),
+    0 0 0 4px var(--ink),
+    6px 6px 0 rgba(20,9,0,.5);
+  background: var(--walnut);
+}
+.pixel-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow:
+    0 0 0 2px var(--gold),
+    0 0 0 4px var(--ink),
+    0 0 0 rgba(20,9,0,.5);
+}
+.pixel-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pixel-btn-primary {
+  background: var(--blood);
+  color: var(--p0);
+}
+.pixel-btn-primary:hover {
+  background: #8c1414;
+}
+
+.pixel-btn-gold {
+  background: var(--gold);
+  color: var(--ink);
+}
+.pixel-btn-gold:hover {
+  background: #dba30c;
+}
+
+.pixel-btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  box-shadow:
+    0 0 0 2px var(--ink),
+    0 0 0 4px var(--p1),
+    4px 4px 0 rgba(20,9,0,.4);
+}
+.pixel-btn-ghost:hover {
+  background: var(--p1);
+}
+
+/* ── HP / MP 條 ── */
+.stat-bar {
+  position: relative;
+  height: 14px;
+  background: var(--ink);
+  border: 2px solid var(--ink);
+  box-shadow: inset 0 0 0 1px var(--gold);
+  overflow: hidden;
+}
+.stat-bar-fill {
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--blood) 0, var(--blood) 6px,
+    #8c1414 6px, #8c1414 8px
+  );
+  transition: width .4s ease;
+}
+.stat-bar-fill-mp {
+  background: repeating-linear-gradient(
+    90deg,
+    #1c4a8c 0, #1c4a8c 6px,
+    #2a6bb8 6px, #2a6bb8 8px
+  );
+}
+.stat-bar-fill-xp {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--gold) 0, var(--gold) 6px,
+    #dba30c 6px, #dba30c 8px
+  );
+}
+
+/* ── 屬性方塊（六大屬性用） ── */
+.stat-block {
+  position: relative;
+  background: rgba(242,230,198,.7);
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 rgba(20,9,0,.4);
+  padding: 10px 8px;
+  text-align: center;
+}
+
+/* ── 自訂滾動條 ── */
+.fancy-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.fancy-scroll::-webkit-scrollbar-track {
+  background: rgba(20,9,0,.3);
+  border-left: 2px solid var(--ink);
+}
+.fancy-scroll::-webkit-scrollbar-thumb {
+  background: var(--gold);
+  border: 1px solid var(--ink);
+}
+.fancy-scroll::-webkit-scrollbar-thumb:hover {
+  background: #dba30c;
+}
+
+.fancy-scroll-dark::-webkit-scrollbar {
+  width: 8px;
+}
+.fancy-scroll-dark::-webkit-scrollbar-track {
+  background: rgba(0,0,0,.4);
+}
+.fancy-scroll-dark::-webkit-scrollbar-thumb {
+  background: var(--gold);
+  border: 1px solid var(--ink);
+}
+
+/* ── 微互動動畫 ── */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .85; }
+}
+.flicker { animation: flicker 2.5s ease-in-out infinite; }
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(196,144,8,.5); }
+  50% { box-shadow: 0 0 0 8px rgba(196,144,8,0); }
+}
+.pulse-gold { animation: pulse-gold 1.8s ease-out infinite; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in-up { animation: fadeInUp .35s ease-out; }
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.scale-in { animation: scaleIn .25s ease-out; }
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.caret-blink::after {
+  content: '\25AE';
+  animation: blink 1s steps(1) infinite;
+  margin-left: 2px;
+  color: var(--gold);
+}
+
+/* ── 場景標題卡 ── */
+.scene-title-card {
+  text-align: center;
+  padding: 16px 0;
+  margin: 12px 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  background: rgba(112,14,14,.08);
+}
+
+/* ── 教學指引 spotlight ── */
+.tutorial-spotlight {
+  position: relative;
+  z-index: 50;
+  box-shadow:
+    0 0 0 9999px rgba(8,4,10,.85),
+    0 0 0 4px var(--gold),
+    0 0 20px 4px var(--gold);
+  pointer-events: auto;
+}
