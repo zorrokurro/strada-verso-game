@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#c49008;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#dba30c;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="8" fill="#08040a"/>
+  <text x="50" y="42" text-anchor="middle" fill="url(#gold)" font-family="serif" font-size="28" font-weight="bold" letter-spacing="2">SV</text>
+  <line x1="20" y1="52" x2="80" y2="52" stroke="#c49008" stroke-width="1" opacity="0.5"/>
+  <text x="50" y="68" text-anchor="middle" fill="#d8c07e" font-family="serif" font-size="10" letter-spacing="3">STRADA VERSO</text>
+</svg>
