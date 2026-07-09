@@ -9,7 +9,6 @@ import { TutorialOverlay } from "./tutorial-overlay";
 import { cn } from "@/lib/utils";
 
 export function PlayScreen() {
-  const character = useGameStore((s) => s.character);
   const setScreen = useGameStore((s) => s.setScreen);
   const showNotesPanel = useGameStore((s) => s.showNotesPanel);
   const setShowNotesPanel = useGameStore((s) => s.setShowNotesPanel);
@@ -34,15 +33,15 @@ export function PlayScreen() {
             className="font-pixel text-[8px] flex items-center gap-1"
             style={{ color: "var(--gold)" }}
           >
-            ◂ STRADA·VERSO
+            ◂ 實驗體21號
           </button>
           <div className="w-px h-4" style={{ background: "var(--gold)", opacity: .4 }} />
           <div className="flex items-center gap-2">
             <span className="font-pixel text-[7px]" style={{ color: "var(--p1)", opacity: .6 }}>
-              CHAPTER
+              ACT
             </span>
             <span className="font-body-tc text-[12px]" style={{ color: "var(--p0)" }}>
-              第二章 · 月光下的低語
+              第二幕 · 第一次接觸人類
             </span>
           </div>
           <div className="w-px h-4" style={{ background: "var(--gold)", opacity: .4 }} />
@@ -51,7 +50,7 @@ export function PlayScreen() {
               LOCATION
             </span>
             <span className="font-body-tc text-[12px]" style={{ color: "var(--gold)" }}>
-              鏽蝕錨旅店 · 一樓大廳
+              街角書店
             </span>
           </div>
         </div>
@@ -64,10 +63,10 @@ export function PlayScreen() {
             ↺ 回顧
           </TopButton>
           <TopButton onClick={restartTutorial}>
-            ? 教學
+            ? 引導
           </TopButton>
           <TopButton onClick={() => setScreen("character")}>
-            ▤ 角色
+            ▤ 檔案
           </TopButton>
           <TopButton>
             ☰ 儲存
@@ -156,21 +155,21 @@ function ReviewPanel({ onClose }: { onClose: () => void }) {
         <div className="flex-1 overflow-y-auto fancy-scroll px-6 py-4">
           <ChapterSummary
             chapter="序章"
-            title="抵達"
-            summary="你搭乘商船「灰鳥號」抵達斯特拉達·維爾索。船長警告你這座城近期不太平。下船後，你直奔熟悉的鏽蝕錨旅店，老闆艾爾德里克似乎認出了你。"
-            highlights={["抵達港口", "認識艾爾德里克", "聽聞失蹤傳聞"]}
+            title="實驗室"
+            summary="你從有記憶以來就在認知科學局第十四區實驗室。文件記錄「3-γ 到 19-γ」，20號之前皆失敗。瑪麗亞博士是唯一的人類接觸。某天，實驗室發生爆炸。"
+            highlights={["實驗室生活", "盧恩薄片", "爆炸逃脫"]}
           />
           <ChapterSummary
-            chapter="第一章"
-            title="鏽蝕錨的夜"
-            summary="艾爾德里克透露近期多人失蹤，並提到碎骨連的舊識曾見過你母親的護身符。你決定留下調查。夜裡，你聽到地下室傳來腳步聲。"
-            highlights={["碎骨連線索", "護身符之謎", "地下室的腳步聲"]}
+            chapter="第一幕"
+            title="逃離"
+            summary="博士在爆炸中救了你，事後配合局方偽造死亡。你帶著盧恩薄片與假遺囑逃出實驗室。第一次接觸外面的世界。"
+            highlights={["博士的真相", "第一次看见天空", "學會隱藏能力"]}
           />
           <ChapterSummary
-            chapter="第二章"
-            title="月光下的低語"
-            summary="艾爾德里克給了你一把生鏽的鑰匙，說樓上有人在等你。她自稱「寂靜」。你必須決定是否上樓。"
-            highlights={["神秘訪客", "寂靜之名", "抉擇時刻"]}
+            chapter="第二幕"
+            title="第一次接觸人類"
+            summary="你來到街角的書店，遇到林和阿嬤。他們的顏色是暖橘色和藍綠色——你從未見過的溫暖。但暗紅色者已經開始追蹤你。"
+            highlights={["遇見林", "第一次理解信任", "暗紅色的影子"]}
             current
           />
         </div>

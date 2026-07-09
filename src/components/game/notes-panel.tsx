@@ -2,20 +2,19 @@
 
 import { useGameStore } from "@/store/game-store";
 import { PixelDivider } from "./primitives";
-import { cn } from "@/lib/utils";
 
 const typeIcons: Record<string, string> = {
-  npc: "人物",
+  person: "人物",
   location: "地點",
-  item: "物品",
-  faction: "勢力",
+  organization: "組織",
+  ability: "能力",
 };
 
 const typeColors: Record<string, string> = {
-  npc: "var(--blood)",
+  person: "var(--blood)",
   location: "var(--gold)",
-  item: "#2a6bb8",
-  faction: "var(--walnut)",
+  organization: "#2a6bb8",
+  ability: "var(--walnut)",
 };
 
 export function NotesPanel() {
@@ -89,10 +88,10 @@ export function NotesPanel() {
 
             <div className="mt-6 p-3" style={{ background: "rgba(112,14,14,.08)", border: "1px dashed var(--blood)" }}>
               <div className="font-pixel text-[7px] mb-1" style={{ color: "var(--blood)" }}>
-                ▸ GM 提示
+                ▸ 敘事者提示
               </div>
               <div className="font-body-tc text-[12px]" style={{ color: "var(--walnut)", lineHeight: 1.6 }}>
-                這個條目已加入你的筆記。在對話中提到相關事物時，AI GM 會自動參照此資訊。
+                這個條目已加入你的筆記。在對話中提到相關事物時，敘事者會自動參照此資訊。
               </div>
             </div>
           </div>
@@ -102,7 +101,7 @@ export function NotesPanel() {
               onClick={() => setOpenNote(null)}
               className="pixel-btn pixel-btn-ghost text-[8px] py-2"
             >
-              ◂ 返回筆記列表
+              ◂ 返回列表
             </button>
             <button
               onClick={() => {
@@ -111,7 +110,7 @@ export function NotesPanel() {
               }}
               className="pixel-btn text-[8px] py-2"
             >
-              關閉筆記面板
+              關閉面板
             </button>
           </div>
         </div>

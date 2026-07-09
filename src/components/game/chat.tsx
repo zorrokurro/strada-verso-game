@@ -52,7 +52,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
         <div className="my-4 fade-in-up">
           <div className="scene-title-card">
             <div className="font-pixel text-[8px] tracking-[3px] mb-2" style={{ color: "var(--blood)" }}>
-              CHECKPOINT
+              CHAPTER
             </div>
             <div className="font-pixel text-[14px] tracking-[2px]" style={{ color: "var(--ink)" }}>
               {msg.content}
@@ -77,7 +77,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
     );
   }
 
-  if (msg.role === "gm") {
+  if (msg.role === "narrator") {
     return (
       <div className="flex gap-3 my-3 fade-in-up">
         <div
@@ -126,7 +126,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
         }}
       >
         <span className="font-pixel text-[8px]" style={{ color: "var(--p0)" }}>
-          YOU
+          21
         </span>
       </div>
       <div
@@ -166,7 +166,7 @@ export function GameChat() {
             style={{ background: "var(--gold)", animation: "blink 1s steps(1) infinite" }}
           />
           <span className="font-pixel text-[7px]" style={{ color: "var(--walnut)" }}>
-            GM 正在構思下一步...
+            敘事者正在構思下一步...
           </span>
         </div>
       </div>
@@ -191,8 +191,8 @@ export function ActionInput() {
     setTimeout(() => {
       pushMessage({
         id: `g-${Date.now()}`,
-        role: "gm",
-        content: "（GM 沉吟片刻，繼續推進故事...）你話語剛落，整個空氣似乎都凝滯了。爐火跳了一下，影子在牆上拉長。你的下一步選擇，將決定接下來的方向。",
+        role: "narrator",
+        content: "（敘事者沉吟片刻，繼續推進故事...）你話語剛落，空氣似乎凝滯了。周圍的聲音變得遙遠。你的下一步選擇，將決定接下來的方向。",
         timestamp: new Date().toISOString(),
       });
     }, 1200);
@@ -213,7 +213,7 @@ export function ActionInput() {
             ▸ 行動輸入
           </span>
           <span className="font-body-tc text-[10px]" style={{ color: "var(--p1)", opacity: .6 }}>
-            描述你想做的事，AI GM 會判定結果
+            描述你想做的事，敘事者會判定結果
           </span>
         </div>
         <div className="flex gap-2">
@@ -226,7 +226,7 @@ export function ActionInput() {
                 submit();
               }
             }}
-            placeholder="例：我悄悄走向樓上第三間房，手按著匕首..."
+            placeholder="例：我走進書店，試著不讓自己的情緒顏色外洩..."
             rows={2}
             className={cn(
               "flex-1 px-3 py-2 resize-none fancy-scroll",

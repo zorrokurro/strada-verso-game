@@ -5,12 +5,10 @@ import { useGameStore } from "@/store/game-store";
 import { PixelButton, PixelDivider, Eyebrow } from "./primitives";
 import { cn } from "@/lib/utils";
 
-const RACES = ["人類", "精靈", "半精靈", "矮人", "半身人", "龍裔", "提夫林", "半獸人"];
-const CLASSES = ["戰士", "遊蕩者", "法師", "牧師", "遊俠", "聖武士", "吟遊詩人", "術士", "邪術師", "武僧", "野蠻人", "德魯伊"];
-const BACKGROUNDS = ["罪犯", "學者", "士兵", "平民英雄", "貴族", "流浪者", "民間英雄", "侍僧", "詐欺師"];
-const ALIGNMENTS = ["守序善良", "中立善良", "混亂善良", "守序中立", "絕對中立", "混亂中立", "守序邪惡", "中立邪惡", "混亂邪惡"];
+const ORGANIZATIONS = ["回聲之民", "認知科學局", "人本安全理事會", "回聖會", "無所屬"];
+const BACKGROUNDS = ["實驗體逃脫者", "能力者後代", "普通人覺醒", "組織叛逃者", "街頭孤兒"];
 
-const STEPS = ["身分", "出身", "屬性", "確認"] as const;
+const STEPS = ["身分", "背景", "能力", "確認"] as const;
 
 export function CreateScreen() {
   const setScreen = useGameStore((s) => s.setScreen);
@@ -20,47 +18,35 @@ export function CreateScreen() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({
     name: character.name,
-    race: character.race,
-    class: character.class,
+    codename: character.codename,
+    gender: character.gender,
+    age: character.age,
+    organization: character.organization,
     background: character.background,
-    alignment: character.alignment,
-    age: character.age || 25,
-    attributes: { ...character.attributes },
+    brainStage: character.brainStage,
+    perception: character.perception,
+    control: character.control,
+    stability: character.stability,
+    knowledge: character.knowledge,
+    awareness: character.awareness,
+    willpower: character.willpower,
   });
-  const [rolling, setRolling] = useState(false);
-
-  const rollAttribute = (key: keyof typeof form.attributes) => {
-    setRolling(true);
-    setTimeout(() => {
-      const rolls = Array.from({ length: 4 }, () => 1 + Math.floor(Math.random() * 6));
-      const sum = rolls.sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + b, 0);
-      setForm((f) => ({ ...f, attributes: { ...f.attributes, [key]: sum } }));
-      setRolling(false);
-    }, 400);
-  };
-
-  const rollAll = () => {
-    setRolling(true);
-    setTimeout(() => {
-      const newAttrs = { ...form.attributes };
-      (Object.keys(newAttrs) as Array<keyof typeof newAttrs>).forEach((k) => {
-        const rolls = Array.from({ length: 4 }, () => 1 + Math.floor(Math.random() * 6));
-        newAttrs[k] = rolls.sort((a, b) => b - a).slice(0, 3).reduce((a, b) => a + b, 0);
-      });
-      setForm((f) => ({ ...f, attributes: newAttrs }));
-      setRolling(false);
-    }, 600);
-  };
 
   const finish = () => {
     updateCharacter({
       name: form.name,
-      race: form.race,
-      class: form.class,
-      background: form.background,
-      alignment: form.alignment,
+      codename: form.codename,
+      gender: form.gender,
       age: form.age,
-      attributes: form.attributes,
+      organization: form.organization,
+      background: form.background,
+      brainStage: form.brainStage,
+      perception: form.perception,
+      control: form.control,
+      stability: form.stability,
+      knowledge: form.knowledge,
+      awareness: form.awareness,
+      willpower: form.willpower,
     });
     setScreen("play");
   };
@@ -76,7 +62,7 @@ export function CreateScreen() {
           ◂ 返回首頁
         </button>
         <div className="font-pixel text-[10px]" style={{ color: "var(--gold)" }}>
-          ◆ 創建新角色
+          ◆ 建立檔案
         </div>
         <div className="font-pixel text-[7px]" style={{ color: "var(--p1)", opacity: .6 }}>
           STEP {step + 1} / {STEPS.length}
@@ -122,23 +108,27 @@ export function CreateScreen() {
                 {form.name || "未命名"}
               </div>
               <div className="font-body-tc text-[12px]" style={{ color: "var(--p0)" }}>
-                {form.race} · {form.class}
+                {form.codename} · {form.gender}
               </div>
               <div className="font-body-tc text-[10px] mt-1" style={{ color: "var(--p1)", opacity: .7 }}>
-                {form.background} · {form.alignment}
-              </div>
-              <div className="font-body-tc text-[10px] mt-2" style={{ color: "var(--p1)", opacity: .5 }}>
-                {form.age} 歲
+                {form.organization} · {form.age}歲
               </div>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-1">
-              {(Object.keys(form.attributes) as Array<keyof typeof form.attributes>).map((k) => (
-                <div key={k} className="text-center p-1" style={{ background: "rgba(0,0,0,.3)" }}>
+              {[
+                { key: "perception", label: "感知" },
+                { key: "control", label: "控制" },
+                { key: "stability", label: "穩定" },
+                { key: "knowledge", label: "知識" },
+                { key: "awareness", label: "覺察" },
+                { key: "willpower", label: "意志" },
+              ].map(({ key, label }) => (
+                <div key={key} className="text-center p-1" style={{ background: "rgba(0,0,0,.3)" }}>
                   <div className="font-pixel text-[6px]" style={{ color: "var(--gold)" }}>
-                    {k.toUpperCase()}
+                    {label}
                   </div>
                   <div className="font-pixel-num text-[14px]" style={{ color: "var(--p0)" }}>
-                    {form.attributes[k]}
+                    {(form as any)[key]}
                   </div>
                 </div>
               ))}
@@ -150,10 +140,10 @@ export function CreateScreen() {
               ▸ 提示
             </div>
             <div className="font-body-tc text-[11px]" style={{ color: "var(--p1)", lineHeight: 1.6 }}>
-              {step === 0 && "為你的角色取個名字。名字會影響 GM 稱呼你的方式。"}
-              {step === 1 && "種族決定你的先天屬性與壽命；職業決定你的戰鬥風格與能力。"}
-              {step === 2 && "4d6 取最高三個。你可以一次擲一個，或一次擲完六個。"}
-              {step === 3 && "確認後即將進入第一章。GM 會根據你的角色背景生成開場。"}
+              {step === 0 && "為你的角色取個代號。代號會影響敘事者稱呼你的方式。"}
+              {step === 1 && "出身決定你的起點視角與初始資源。"}
+              {step === 2 && "分配能力點數。感知越高，能看見的顏色越多；控制越高，干涉能力越強。"}
+              {step === 3 && "確認後即將進入序章。敘事者會根據你的背景生成開場。"}
             </div>
           </div>
         </div>
@@ -165,12 +155,29 @@ export function CreateScreen() {
                 <Eyebrow light className="mb-4">01 · IDENTITY · 身分</Eyebrow>
 
                 <div className="mb-5">
-                  <label className="text-eyebrow-light block mb-2">角色名稱 · NAME</label>
+                  <label className="text-eyebrow-light block mb-2">代號 · CODENAME</label>
                   <input
                     type="text"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="輸入你的角色名字"
+                    value={form.codename}
+                    onChange={(e) => setForm({ ...form, codename: e.target.value })}
+                    placeholder="例：21-γ"
+                    className="w-full px-3 py-2.5 font-body-tc text-[15px]"
+                    style={{
+                      background: "rgba(242,230,198,.08)",
+                      border: "2px solid var(--gold)",
+                      color: "var(--p0)",
+                      boxShadow: "inset 0 0 0 1px var(--ink)",
+                    }}
+                  />
+                </div>
+
+                <div className="mb-5">
+                  <label className="text-eyebrow-light block mb-2">性別 · GENDER</label>
+                  <input
+                    type="text"
+                    value={form.gender}
+                    onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                    placeholder="例：模糊"
                     className="w-full px-3 py-2.5 font-body-tc text-[15px]"
                     style={{
                       background: "rgba(242,230,198,.08)",
@@ -200,68 +207,46 @@ export function CreateScreen() {
 
             {step === 1 && (
               <div className="fade-in-up">
-                <Eyebrow light className="mb-4">02 · ORIGIN · 出身</Eyebrow>
+                <Eyebrow light className="mb-4">02 · BACKGROUND · 背景</Eyebrow>
 
                 <ChoiceGrid
-                  label="種族 · RACE"
-                  options={RACES}
-                  value={form.race}
-                  onChange={(v) => setForm({ ...form, race: v })}
+                  label="所屬 · ORGANIZATION"
+                  options={ORGANIZATIONS}
+                  value={form.organization}
+                  onChange={(v) => setForm({ ...form, organization: v })}
                 />
                 <ChoiceGrid
-                  label="職業 · CLASS"
-                  options={CLASSES}
-                  value={form.class}
-                  onChange={(v) => setForm({ ...form, class: v })}
-                />
-                <ChoiceGrid
-                  label="背景 · BACKGROUND"
+                  label="出身 · ORIGIN"
                   options={BACKGROUNDS}
                   value={form.background}
                   onChange={(v) => setForm({ ...form, background: v })}
-                />
-                <ChoiceGrid
-                  label="陣營 · ALIGNMENT"
-                  options={ALIGNMENTS}
-                  value={form.alignment}
-                  onChange={(v) => setForm({ ...form, alignment: v })}
                 />
               </div>
             )}
 
             {step === 2 && (
               <div className="fade-in-up">
-                <div className="flex items-center justify-between mb-4">
-                  <Eyebrow light>03 · ABILITY SCORES · 屬性擲骰</Eyebrow>
-                  <PixelButton variant="gold" onClick={rollAll} disabled={rolling} className="text-[8px] px-3 py-1.5">
-                    一次擲完六個 ▸
-                  </PixelButton>
-                </div>
+                <Eyebrow light className="mb-4">03 · ABILITIES · 能力分配</Eyebrow>
 
                 <div className="grid grid-cols-3 gap-4">
-                  {(Object.keys(form.attributes) as Array<keyof typeof form.attributes>).map((k) => {
-                    const labels: Record<string, { zh: string; abbr: string }> = {
-                      str: { zh: "力量", abbr: "STR" },
-                      dex: { zh: "敏捷", abbr: "DEX" },
-                      con: { zh: "體質", abbr: "CON" },
-                      int: { zh: "智力", abbr: "INT" },
-                      wis: { zh: "睿智", abbr: "WIS" },
-                      cha: { zh: "魅力", abbr: "CHA" },
-                    };
-                    const score = form.attributes[k];
-                    const mod = Math.floor((score - 10) / 2);
-                    const { zh, abbr } = labels[k];
+                  {[
+                    { key: "perception", zh: "感知", abbr: "EP", desc: "看見情緒顏色的能力" },
+                    { key: "control", zh: "控制", abbr: "CT", desc: "精確干涉微觀粒子" },
+                    { key: "stability", zh: "穩定", abbr: "ST", desc: "抵抗左腦退位的速度" },
+                    { key: "knowledge", zh: "知識", abbr: "KN", desc: "物理原理的理解深度" },
+                    { key: "awareness", zh: "覺察", abbr: "AW", desc: "對周遭環境的敏銳度" },
+                    { key: "willpower", zh: "意志", abbr: "WP", desc: "維持自我認知的力量" },
+                  ].map(({ key, zh, abbr, desc }) => {
+                    const value = (form as any)[key];
+                    const mod = Math.floor((value - 10) / 2);
                     return (
-                      <button
-                        key={k}
-                        onClick={() => rollAttribute(k)}
-                        disabled={rolling}
-                        className="text-center p-4 transition-all hover:translate-y-[-2px]"
+                      <div
+                        key={key}
+                        className="text-center p-4"
                         style={{
                           background: "rgba(20,9,0,.5)",
                           border: "2px solid var(--gold)",
                           boxShadow: "3px 3px 0 rgba(0,0,0,.5)",
-                          cursor: rolling ? "wait" : "pointer",
                         }}
                       >
                         <div className="font-pixel text-[8px] mb-1" style={{ color: "var(--gold)" }}>
@@ -272,27 +257,30 @@ export function CreateScreen() {
                         </div>
                         <div
                           className="font-pixel-num text-[36px] leading-none mb-1"
-                          style={{
-                            color: rolling ? "var(--p2)" : "var(--p0)",
-                            transition: "color .2s",
-                          }}
+                          style={{ color: "var(--p0)" }}
                         >
-                          {rolling ? "?" : score}
+                          {value}
                         </div>
-                        <div
-                          className="inline-block font-pixel-num text-[12px] px-1.5"
-                          style={{
-                            color: "var(--p0)",
-                            background: "var(--blood)",
-                            border: "1px solid var(--gold)",
-                          }}
-                        >
-                          {mod >= 0 ? "+" : ""}{mod}
+                        <div className="font-body-tc text-[10px] mb-2" style={{ color: "var(--p1)", opacity: .6 }}>
+                          {desc}
                         </div>
-                        <div className="font-pixel text-[6px] mt-2" style={{ color: "var(--gold)", opacity: .6 }}>
-                          ▸ 點擊重擲
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => setForm((f) => ({ ...f, [key]: Math.max(1, (f as any)[key] - 1) }))}
+                            className="font-pixel text-[12px] w-6 h-6 flex items-center justify-center"
+                            style={{ color: "var(--gold)", border: "1px solid var(--gold)" }}
+                          >
+                            -
+                          </button>
+                          <button
+                            onClick={() => setForm((f) => ({ ...f, [key]: Math.min(20, (f as any)[key] + 1) }))}
+                            className="font-pixel text-[12px] w-6 h-6 flex items-center justify-center"
+                            style={{ color: "var(--gold)", border: "1px solid var(--gold)" }}
+                          >
+                            +
+                          </button>
                         </div>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -302,7 +290,7 @@ export function CreateScreen() {
                   style={{ background: "rgba(196,144,8,.08)", border: "1px dashed var(--gold)" }}
                 >
                   <span className="font-body-tc text-[12px]" style={{ color: "var(--p1)" }}>
-                    規則：4d6 取最高三個之和（範圍 3-18）
+                    點擊 + / - 調整各項能力數值
                   </span>
                 </div>
               </div>
@@ -318,33 +306,33 @@ export function CreateScreen() {
                       {form.name || "未命名"}
                     </div>
                     <div className="font-body-tc text-[14px]" style={{ color: "var(--p0)" }}>
-                      {form.race} · {form.class} · Lv.1
+                      {form.codename} · {form.gender} · {form.age}歲
                     </div>
                     <div className="font-body-tc text-[12px] mt-1" style={{ color: "var(--p1)", opacity: .7 }}>
-                      {form.background} · {form.alignment} · {form.age}歲
+                      {form.organization} · {form.background}
                     </div>
                   </div>
 
                   <PixelDivider dark className="my-3" />
 
                   <div className="grid grid-cols-3 gap-2">
-                    {(Object.keys(form.attributes) as Array<keyof typeof form.attributes>).map((k) => {
-                      const score = form.attributes[k];
-                      const mod = Math.floor((score - 10) / 2);
-                      return (
-                        <div key={k} className="text-center p-2" style={{ background: "rgba(0,0,0,.3)" }}>
-                          <div className="font-pixel text-[7px]" style={{ color: "var(--gold)" }}>
-                            {k.toUpperCase()}
-                          </div>
-                          <div className="font-pixel-num text-[18px]" style={{ color: "var(--p0)" }}>
-                            {score}
-                          </div>
-                          <div className="font-pixel text-[6px]" style={{ color: "var(--blood)" }}>
-                            {mod >= 0 ? "+" : ""}{mod}
-                          </div>
+                    {[
+                      { key: "perception", label: "感知" },
+                      { key: "control", label: "控制" },
+                      { key: "stability", label: "穩定" },
+                      { key: "knowledge", label: "知識" },
+                      { key: "awareness", label: "覺察" },
+                      { key: "willpower", label: "意志" },
+                    ].map(({ key, label }) => (
+                      <div key={key} className="text-center p-2" style={{ background: "rgba(0,0,0,.3)" }}>
+                        <div className="font-pixel text-[7px]" style={{ color: "var(--gold)" }}>
+                          {label}
                         </div>
-                      );
-                    })}
+                        <div className="font-pixel-num text-[18px]" style={{ color: "var(--p0)" }}>
+                          {(form as any)[key]}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -356,14 +344,14 @@ export function CreateScreen() {
                     ⚠ 注意
                   </div>
                   <div className="font-body-tc text-[12px]" style={{ color: "var(--p1)", lineHeight: 1.6 }}>
-                    確認後即將進入第一章「序章·抵達」。GM 將根據你的角色背景生成開場。
-                    角色資訊後續可在角色檔案頁面查看。
+                    確認後即將進入序章。敘事者將根據你的背景生成開場。
+                    檔案資訊後續可在角色檔案頁面查看。
                   </div>
                 </div>
 
                 <div className="flex gap-3">
                   <PixelButton variant="primary" onClick={finish} className="flex-1 py-3">
-                    ▸ 開始冒險
+                    ▸ 開始旅程
                   </PixelButton>
                   <PixelButton variant="ghost" onClick={() => setStep(0)} className="px-4">
                     重新調整

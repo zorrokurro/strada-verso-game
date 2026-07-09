@@ -1,4 +1,4 @@
-export type KeywordType = "npc" | "location" | "item" | "faction";
+export type KeywordType = "person" | "location" | "organization" | "ability";
 
 export interface KeywordNote {
   id: string;
@@ -9,7 +9,7 @@ export interface KeywordNote {
   firstSeen: string;
 }
 
-export type MessageRole = "gm" | "player" | "system";
+export type MessageRole = "narrator" | "player" | "system";
 
 export interface ChatMessage {
   id: string;
@@ -22,100 +22,103 @@ export interface ChatMessage {
 
 export interface CharacterSheet {
   name: string;
-  race: string;
-  class: string;
-  level: number;
+  codename: string;
+  gender: string;
+  age: number;
+  organization: string;
   background: string;
-  alignment: string;
-  age?: number;
-  attributes: {
-    str: number;
-    dex: number;
-    con: number;
-    int: number;
-    wis: number;
-    cha: number;
-  };
+  appearance: string;
+  // 右腦能力
+  brainStage: number;
+  brainStages: {
+    label: string;
+    unlocked: boolean;
+  }[];
+  // 能力數值
+  perception: number;
+  control: number;
+  stability: number;
+  knowledge: number;
+  awareness: number;
+  willpower: number;
+  // 生理狀態
   hp: { current: number; max: number };
-  mp: { current: number; max: number };
-  ac: number;
-  initiative: number;
-  speed: number;
-  attackBonus: number;
-  damage: string;
-  xp: { current: number; next: number };
-  gold: number;
+  // 盧恩薄片
+  runeFragment: boolean;
+  // 物品
   inventory: { name: string; qty: number; desc?: string }[];
 }
 
 export const mockCharacter: CharacterSheet = {
-  name: "艾爾卓德·夜梟",
-  race: "半精靈",
-  class: "遊蕩者",
-  level: 3,
-  background: "罪犯",
-  alignment: "混亂中立",
-  age: 27,
-  attributes: { str: 10, dex: 17, con: 14, int: 13, wis: 12, cha: 15 },
-  hp: { current: 22, max: 28 },
-  mp: { current: 8, max: 12 },
-  ac: 15,
-  initiative: 3,
-  speed: 30,
-  attackBonus: 5,
-  damage: "1d6+3 穿刺",
-  xp: { current: 950, next: 1800 },
-  gold: 47,
+  name: "實驗體21號",
+  codename: "21-γ",
+  gender: "模糊",
+  age: 16,
+  organization: "回聲之民",
+  background: "零號計劃首個存活體，從有記憶以來就在認知科學局第十四區實驗室。6歲學會隱瞞能力。世界觀來自童話故事。",
+  appearance: "黑髮黑瞳，皮膚蒼白，身高約170cm，體型清瘦。左手腕內側有實驗體編號燙印「21」。常穿著灰色連帽外套。",
+  brainStage: 1,
+  brainStages: [
+    { label: "情緒顏色感知", unlocked: true },
+    { label: "微物理干涉", unlocked: false },
+    { label: "集體意識感知", unlocked: false },
+    { label: "概率觸及", unlocked: false },
+  ],
+  perception: 8,
+  control: 3,
+  stability: 5,
+  knowledge: 4,
+  awareness: 7,
+  willpower: 6,
+  hp: { current: 100, max: 100 },
+  runeFragment: true,
   inventory: [
-    { name: "匕首", qty: 2, desc: "鋒利的雙刃短刀" },
-    { name: "皮甲", qty: 1, desc: "輕便但提供基本防護" },
-    { name: "盜賊工具", qty: 1, desc: "開鎖、解除陷阱用" },
-    { name: "治療藥水", qty: 3, desc: "恢復 2d4+2 HP" },
-    { name: "繩索（50呎）", qty: 1 },
-    { name: "火把", qty: 5 },
+    { name: "盧恩薄片", qty: 1, desc: "刻有奇異符號的金屬薄片，博士交給你的唯一物品" },
+    { name: "灰色連帽外套", qty: 1, desc: "逃亡時撿來的，口袋裡永遠裹著盧恩薄片" },
+    { name: "實驗體紀錄碎片", qty: 3, desc: "從實驗室帶出的文件殘頁" },
   ],
 };
 
 export const mockNotes: KeywordNote[] = [
   {
-    id: "aldric",
-    type: "npc",
-    title: "艾爾德里克·灰斗篷",
-    summary: "旅店老闆，前傭兵，似乎認識你的過去。",
-    details: "禿頭、左眼有道長疤。經營「鏽蝕錨」旅店超過十五年。據說曾是「碎骨連」的副隊長，在一次任務中失去半個小隊後金盆洗手。對你的態度曖昧——既像在保護你，又像在監視你。",
-    firstSeen: "第一章·抵達鏽蝕錨",
+    id: "maria",
+    type: "person",
+    title: "瑪麗亞·維爾納博士",
+    summary: "認知科學局強化組核心研究員，零號計劃主導者。你的創造者、救贖者、被迫合作者。",
+    details: "約60歲，白髮盤起，深藍眼。常穿白大褂，袖口有燒傷疤痕。表層冷靜客觀，深層藏著被壓抑的愧疚與母性衝動。她叫你「孩子」，但在局方面前稱你「觀察對象」。Ch.01爆炸中偽造死亡，實則被軟禁繼續研究。",
+    firstSeen: "實驗室",
   },
   {
-    id: "rusty-anchor",
-    type: "location",
-    title: "鏽蝕錨旅店",
-    summary: "港口區最老的旅店，木造建築，常客多為水手與傭兵。",
-    details: "位於斯特拉達·維爾索舊港區西側。一樓是酒館，二樓是六間客房，地下室據說通往某條被遺忘的渠道。爐火總是燒著，空氣中混著鹹味與烤洋蔥的氣味。",
-    firstSeen: "第一章·抵達鏽蝕錨",
+    id: "cognitive-bureau",
+    type: "organization",
+    title: "認知科學局",
+    summary: "試圖量化、複製、武器化右腦能力的政府機構。把你當作實驗成果而非人。",
+    details: "原名「科學之光」。強化組負責能力者研究，清理組派出暗紅色者追蹤逃脫的實驗體。零號計劃真實目的：培育「不會同化的右腦全開體」作為戰略兵器。21號之前20個實驗體全數同化或處決。",
+    firstSeen: "實驗室",
   },
   {
-    id: "bone-legion",
-    type: "faction",
-    title: "碎骨連",
-    summary: "活躍於南方邊境的傭兵團，以殘酷聞名。",
-    details: "約 200 人的編制，旗幟是白骨交叉於黑底。近年傳聞與某個貴族家族暗通款曲，開始接一些見不得光的委託。艾爾德里克離開後，連隊由「鐵爪」加爾文接管。",
-    firstSeen: "第一章·抵達鏽蝕錨",
+    id: "echo-people",
+    type: "organization",
+    title: "回聲之民",
+    summary: "被三方勢力排斥的地下能力者網絡，以節點制運作。",
+    details: "無統一領導，維護「轉生路線」，讓即將同化的能力者以轉生者身分繼續存在。山谷節點是重要據點。亮紅色男人、亮藍綠女孩、銀白色老人皆屬於此。",
+    firstSeen: "第二幕·第一次接觸",
   },
   {
-    id: "owl-pendant",
-    type: "item",
-    title: "夜梟護身符",
-    summary: "母親留下的銀製護身符，背面刻著不知名的符文。",
-    details: "重量極輕，月圓之夜會微微發涼。你曾試過所有已知的解讀方法都失敗。直到昨夜，鏽蝕錨的盲眼琴師觸碰它時，低聲說：「這是通往『寂靜之廳』的鑰匙。」",
-    firstSeen: "第二章·月光下的低語",
+    id: "rune-tablet",
+    type: "ability",
+    title: "盧恩薄片",
+    summary: "刻有盧恩文字的金屬薄片，能幫助穩定右腦操控狀態。",
+    details: "不是魔法，是心理學與神經科學的交叉點。盧恩文字具有極強的「心理暗示激活效果」，能幫助右腦使用者進入操控狀態。博士在Ch.01塞入你手中的「刻有奇異符號的金屬薄片」。",
+    firstSeen: "實驗室",
   },
   {
-    id: "strada-verso",
-    type: "location",
-    title: "斯特拉達·維爾索",
-    summary: "你所在的城市，港口商業重鎮，被稱為「通往西方的階梯」。",
-    details: "建城三百年，由七大家族共治。城市分為舊港區、新市集、貴族丘、霧巷四個區域。近月來失蹤案件頻傳，官方諱莫如深。",
-    firstSeen: "序章·抵達",
+    id: "lin",
+    type: "person",
+    title: "林",
+    summary: "書店店員，第一個不把你當實驗體的人。教會你「溫度」與「信任」。",
+    details: "普通人，沒有右腦能力。與祖母同住。給予你第一個家的感覺。他的情緒顏色是暖橘色——善意、溫暖、無條件接納。在Ch.05被暗紅色者殺害。",
+    firstSeen: "第二幕·第一次接觸",
   },
 ];
 
@@ -123,64 +126,67 @@ export const mockMessages: ChatMessage[] = [
   {
     id: "m1",
     role: "system",
-    content: "第二章·月光下的低語",
+    content: "第二幕 · 第一次接觸人類",
     timestamp: "2026-03-15T20:00:00Z",
-    sceneTitle: "第二章",
+    sceneTitle: "第二幕",
     isCheckpoint: true,
   },
   {
     id: "m2",
-    role: "gm",
-    content: "夜半時分，[[rusty-anchor|鏽蝕錨]]的酒館已經空了大半。你最後一杯麥酒還剩半杯，爐火劈啪作響。[[aldric|艾爾德里克]]用抹布擦著杯子，目光卻不時飄向你腰間的[[owl-pendant|夜梟護身符]]。他終於放下杯子，低聲開口：「孩子，[[strada-verso|這座城]]這幾天不太對勁。碼頭又少了三個人。」",
+    role: "narrator",
+    content: "雨停了。你站在街角的阴影裡，帽簷壓得很低。這是你逃出實驗室後的第三天。胃裡空空的，左手腕的燙印还在隱隱作痛。路過的人身上都帶著顏色——你已經學會不去看。但有個人不一樣。[[lin|書店]]的門打開時，裡面走出來的老人身上帶著[[maria|暖橘色]]。你已經很久沒見過這種顏色了。",
     timestamp: "2026-03-15T20:00:05Z",
   },
   {
     id: "m3",
     role: "player",
-    content: "我抬頭看他，把護身符藏進衣領裡。「又是失蹤？官方怎麼說？」",
+    content: "我猶豫了一下，還是走向書店。門上掛著「營業中」的木牌。",
     timestamp: "2026-03-15T20:01:12Z",
   },
   {
     id: "m4",
-    role: "gm",
-    content: "他冷哼一聲。「官方？他們只會說那些人『乘船去了西方』。但碼頭簿子上沒有任何離港紀錄。」他靠近一些，聲音壓得更低：「我知道你不是普通的旅人。你身上那個護身符... 我曾在[[bone-legion|碎骨連]]的某個老傭兵身上見過同樣的花紋。」",
+    role: "narrator",
+ content: "推開門，風鈴響了。一個年輕男人從書架後面抬起頭。他身上的顏色是安靜的藍綠色——[[lin|林]]。他看了你一眼，沒有露出大多數人會有的那種表情。不是恐懼，不是厭惡。只是平靜地說：「歡迎。想找什麼書？」",
     timestamp: "2026-03-15T20:01:30Z",
   },
   {
     id: "m5",
     role: "system",
-    content: "感知檢定（DC 12）：你擲出 d20+3 = 16 ✓ 成功",
+    content: "情緒感知（被動）：林 — 藍綠色（安靜、安全、理性守護）",
     timestamp: "2026-03-15T20:01:35Z",
   },
   {
     id: "m6",
-    role: "gm",
-    content: "你注意到他說「碎骨連」三個字時，右手下意識摸向腰後——那裡通常藏著一把短劍。他並沒有威脅你的意思，更像是一種長年養成的警戒。你看得出來，他知情，但也在害怕。",
+    role: "narrator",
+    content: "你不知道該怎麼回答。在實驗室裡，沒有人問過你「想要什麼」。你習慣了被觀察、被記錄、被分析。但眼前這個人只是等著，不急。他的藍綠色很穩定，沒有裂縫，沒有暗紅。你第一次覺得，也許可以試著開口。",
     timestamp: "2026-03-15T20:01:40Z",
   },
   {
     id: "m7",
     role: "player",
-    content: "「你認識我母親。」我直視他的眼睛，不是問句。",
+    content: "「……有沒有那種，小孩會喜歡的故事書？」",
     timestamp: "2026-03-15T20:02:20Z",
   },
   {
     id: "m8",
-    role: "gm",
-    content: "酒館的鐘響了十二下。爐火突然矮了半吋，像有什麼東西吸走了一口氣。艾爾德里克臉色一變，從吧台下方抽出一把生鏽的鑰匙推向你。「樓上第三間房。有人在等你。她... 她說她叫『寂靜』。」",
+    role: "narrator",
+    content: "他笑了。藍綠色微微發亮。「有啊。」他從架上抽出一本舊舊的童話集，封面上畫著一棵大樹。「這本不錯。很多人小時候都看過。」你接過來，指尖觸到書頁的瞬間，[[rune-tablet|盧恩薄片]]在口袋裡微微發燙。你不知道為什麼。但你決定留下來。",
     timestamp: "2026-03-15T20:02:35Z",
   },
 ];
 
-export const attributeMod = (score: number): number => Math.floor((score - 10) / 2);
+export const brainStageLabels = [
+  { zh: "情緒顏色感知", abbr: "EP", desc: "被動感知他人情緒狀態為顏色" },
+  { zh: "微物理干涉", abbr: "PC", desc: "需要學習對應物理知識才能使用" },
+  { zh: "集體意識感知", abbr: "CA", desc: "感受到人群的情緒場" },
+  { zh: "概率觸及", abbr: "PR", desc: "接近預知，但伴隨自我瓦解" },
+];
 
-export const formatMod = (mod: number): string => (mod >= 0 ? `+${mod}` : `${mod}`);
-
-export const attributeLabels: Record<keyof CharacterSheet["attributes"], { zh: string; abbr: string }> = {
-  str: { zh: "力量", abbr: "STR" },
-  dex: { zh: "敏捷", abbr: "DEX" },
-  con: { zh: "體質", abbr: "CON" },
-  int: { zh: "智力", abbr: "INT" },
-  wis: { zh: "睿智", abbr: "WIS" },
-  cha: { zh: "魅力", abbr: "CHA" },
+export const statLabels: Record<string, { zh: string; abbr: string }> = {
+  perception: { zh: "感知", abbr: "EP" },
+  control: { zh: "控制", abbr: "CT" },
+  stability: { zh: "穩定", abbr: "ST" },
+  knowledge: { zh: "知識", abbr: "KN" },
+  awareness: { zh: "覺察", abbr: "AW" },
+  willpower: { zh: "意志", abbr: "WP" },
 };
