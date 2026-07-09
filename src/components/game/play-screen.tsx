@@ -37,24 +37,42 @@ export function PlayScreen() {
           >
             ◂ STRADA·VERSO
           </button>
-          <div className="w-px h-4" style={{ background: "var(--gold)", opacity: .4 }} />
-          <div className="flex items-center gap-2">
-            <span className="font-pixel text-[7px]" style={{ color: "var(--p1)", opacity: .6 }}>
-              ERA
-            </span>
-            <span className="font-body-tc text-[12px]" style={{ color: "var(--p0)" }}>
-              {character.era}
-            </span>
-          </div>
-          <div className="w-px h-4" style={{ background: "var(--gold)", opacity: .4 }} />
-          <div className="flex items-center gap-2">
-            <span className="font-pixel text-[7px]" style={{ color: "var(--p1)", opacity: .6 }}>
-              LOCATION
-            </span>
-            <span className="font-body-tc text-[12px]" style={{ color: "var(--gold)" }}>
-              認知科學局地下設施 · 觀測室
-            </span>
-          </div>
+          {character.era && (
+            <>
+              <div className="w-px h-4" style={{ background: "var(--gold)", opacity: .4 }} />
+              <div className="flex items-center gap-2">
+                <span className="font-pixel text-[7px]" style={{ color: "var(--p1)", opacity: .6 }}>
+                  ERA
+                </span>
+                <span className="font-body-tc text-[12px]" style={{ color: "var(--p0)" }}>
+                  {character.era}
+                </span>
+              </div>
+            </>
+          )}
+          {character.region && (
+            <>
+              <div className="w-px h-4" style={{ background: "var(--gold)", opacity: .4 }} />
+              <div className="flex items-center gap-2">
+                <span className="font-pixel text-[7px]" style={{ color: "var(--p1)", opacity: .6 }}>
+                  LOCATION
+                </span>
+                <span className="font-body-tc text-[12px]" style={{ color: "var(--gold)" }}>
+                  {character.region}
+                </span>
+              </div>
+            </>
+          )}
+          {!character.era && character.name && (
+            <>
+              <div className="w-px h-4" style={{ background: "var(--gold)", opacity: .4 }} />
+              <div className="flex items-center gap-2">
+                <span className="font-body-tc text-[12px]" style={{ color: "var(--p0)" }}>
+                  {character.name} — 等待 AI 生成角色...
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

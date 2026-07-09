@@ -94,7 +94,29 @@ export const SOCIAL_CLASSES = [
 
 export const ABILITY_STATUSES = ["普通人", "微覺醒", "能力者"] as const;
 
-// ── Mock 角色 ──
+// ── 空白角色（玩家只輸入名字，其他由 AI 生成） ──
+export const blankCharacter: CharacterSheet = {
+  name: "",
+  gender: "",
+  age: 0,
+  era: "",
+  eraYear: "",
+  region: "",
+  socialClass: "",
+  familyBackground: "",
+  occupation: "",
+  abilityStatus: "普通人",
+  leftBrain: { reason: 0, memory: 0, language: 0, logic: 0, self: 0 },
+  rightBrain: { perception: 0, imagination: 0, intuition: 0, emotion: 0, insight: 0 },
+  health: { label: "良好", pct: 100 },
+  sanity: { current: 100, max: 100 },
+  mood: { label: "平靜", pct: 70 },
+  currency: 0,
+  inventory: [],
+  knownInfo: [],
+};
+
+// ── Mock 角色（預設展示用） ──
 export const mockCharacter: CharacterSheet = {
   name: "莉亞·艾克曼",
   gender: "女",
