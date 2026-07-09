@@ -5,32 +5,32 @@ import { PixelButton } from "./primitives";
 
 const STEPS = [
   {
-    title: "歡迎，實驗體21號",
-    body: "這是一個由 AI 擔任敘事者的互動文字冒險。你用文字描述你想做的事，敘事者會判定結果並推進故事。",
+    title: "歡迎來到斯特拉達·維爾索",
+    body: "這是一個由 AI 擔任遊戲主持人（GM）的單人文字冒險。你只需輸入一個名字，AI 會根據世界觀隨機生成你的角色——時代、地域、家族、能力狀態。然後用文字描述你想做的事，AI 會判定結果並推進故事。",
     highlight: null as string | null,
     icon: "◆",
   },
   {
-    title: "左側是敘事區",
-    body: "敘事者的描述用羊皮紙框呈現，你的行動用深色框呈現。系統訊息會以小卡片顯示。可點擊的關鍵字會以金色底線高亮——點下去可查看筆記詳情。",
+    title: "左側是 GM 對話區",
+    body: "GM 的敘事用羊皮紙框呈現，你的行動用深色框呈現。系統訊息（章節切換等）會以小卡片顯示。可點擊的關鍵字會以金色底線高亮——點下去可查看筆記詳情。",
     highlight: "chat",
     icon: "◈",
   },
   {
-    title: "右側是你的角色檔案",
-    body: "隨時顯示你的右腦階段、能力數值與物品。使用能力會加速左腦退位——這是代價。",
+    title: "右側是你的角色卡",
+    body: "隨時顯示健康、理智、情緒狀態，以及左腦（理性面）和右腦（直覺面）屬性。能力狀態從普通人到能力者不等。角色死亡時，AI 會為你撰寫一生的故事。",
     highlight: "sheet",
     icon: "▤",
   },
   {
     title: "下方輸入你的行動",
-    body: "用自然語言描述你想做的事，例如「我走進書店」或「我嘗試感知他的情緒顏色」。Enter 送出，Shift+Enter 換行。",
+    body: "用自然語言描述你想做的事，例如「我檢查實驗體的狀況」或「我感覺空氣中的溫度變化」。Enter 送出，Shift+Enter 換行。第一次輸入的是你的名字，AI 會據此生成角色。",
     highlight: "input",
     icon: "▸",
   },
   {
     title: "準備好了嗎？",
-    body: "頂部的「筆記 / 回顧 / 引導 / 檔案」可隨時叫出。你的選擇會被記住——你的能力成長，也是你的瓦解。",
+    body: "頂部的「筆記 / 回顧 / 教學 / 角色」可隨時叫出。能力的覺醒是漸進的——你不會直接看到「使用了能力」，而是透過身體感覺來感知。祝你好運。",
     highlight: null,
     icon: "★",
   },
@@ -49,16 +49,19 @@ export function TutorialOverlay() {
 
   return (
     <div className="absolute inset-0 z-50 flex items-end justify-center pb-8 px-4 pointer-events-none">
+      {/* spotlight 效果 */}
       {current.highlight && (
         <div
           className="absolute pointer-events-none"
           style={{
             background: "rgba(8,4,10,.85)",
+            // 上、右、下、左 mask 用 box-shadow 模擬
             boxShadow: "0 0 0 9999px rgba(8,4,10,.85)",
           }}
         />
       )}
 
+      {/* 對話卡 */}
       <div
         className="pointer-events-auto scale-in"
         style={{
@@ -69,6 +72,7 @@ export function TutorialOverlay() {
           width: "100%",
         }}
       >
+        {/* 標題列 */}
         <div
           className="flex items-center justify-between px-4 py-2"
           style={{ borderBottom: "2px solid var(--gold)" }}
@@ -78,7 +82,7 @@ export function TutorialOverlay() {
               {current.icon}
             </span>
             <span className="font-pixel text-[9px]" style={{ color: "var(--gold)" }}>
-              引導 · TUTORIAL
+              教學 · TUTORIAL
             </span>
           </div>
           <span className="font-pixel text-[8px]" style={{ color: "var(--p1)" }}>
@@ -86,6 +90,7 @@ export function TutorialOverlay() {
           </span>
         </div>
 
+        {/* 進度條 */}
         <div className="flex gap-1 px-4 py-2" style={{ background: "rgba(196,144,8,.08)" }}>
           {STEPS.map((_, i) => (
             <div
@@ -98,6 +103,7 @@ export function TutorialOverlay() {
           ))}
         </div>
 
+        {/* 內容 */}
         <div className="px-5 py-5">
           <div className="font-pixel text-[14px] mb-3" style={{ color: "var(--p0)", letterSpacing: "1.5px" }}>
             {current.title}
@@ -110,6 +116,7 @@ export function TutorialOverlay() {
           </p>
         </div>
 
+        {/* 按鈕列 */}
         <div
           className="flex items-center justify-between px-4 py-3"
           style={{ borderTop: "2px solid var(--gold)", background: "rgba(196,144,8,.05)" }}
@@ -119,7 +126,7 @@ export function TutorialOverlay() {
             className="font-pixel text-[8px] px-3 py-1.5"
             style={{ color: "var(--p1)", opacity: .6 }}
           >
-            略過引導
+            略過教學
           </button>
           <div className="flex gap-2">
             {step > 0 && (
@@ -128,7 +135,7 @@ export function TutorialOverlay() {
               </PixelButton>
             )}
             <PixelButton variant="primary" onClick={next} className="text-[8px] py-2">
-              {step < STEPS.length - 1 ? "下一步 ▸" : "開始旅程 ★"}
+              {step < STEPS.length - 1 ? "下一步 ▸" : "開始冒險 ★"}
             </PixelButton>
           </div>
         </div>
