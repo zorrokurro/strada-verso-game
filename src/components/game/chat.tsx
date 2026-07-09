@@ -190,6 +190,8 @@ export function ActionInput() {
   const updateCharacter = useGameStore((s) => s.updateCharacter);
   const character = useGameStore((s) => s.character);
   const messages = useGameStore((s) => s.messages);
+  const pendingGeneration = useGameStore((s) => s.pendingGeneration);
+  const setPendingGeneration = useGameStore((s) => s.setPendingGeneration);
 
   const applyStatusUpdates = (updates: StatusUpdates) => {
     const patch: Record<string, unknown> = {};
@@ -222,7 +224,61 @@ export function ActionInput() {
     setValue("");
 
     // 判斷是否需要生成角色
-    const needsGeneration = !character.era;
+  const needsGeneration = !character.era;
+
+  // 自動生成：從建立角色畫面進來時，自動觸發 AI 生成
+  useEffect(() => {
+    if (pendingGeneration && character.name && needsGeneration && !loading) {
+      setPendingGeneration(false);
+      setLoading(true);
+
+      pushMessage({
+        id: `p-${Date.now()}`,
+        role: "player",
+        content: character.name,
+        timestamp: new Date().toISOString(),
+      });
+
+      pushMessage({
+        id: `sys-${Date.now()}`,
+        role: "system",
+        content: "AI 正在生成你的角色和世界...",
+        timestamp: new Date().toISOString(),
+      });
+
+      (async () => {
+        try {
+          const settings = loadAISettings();
+          const result = await generateCharacter(character.name, settings);
+          updateCharacter(result.character);
+
+          pushMessage({
+            id: `sys-${Date.now() + 1}`,
+            role: "system",
+            content: `${result.character.era} · ${result.character.region}`,
+            timestamp: new Date().toISOString(),
+            sceneTitle: result.character.era || "序章",
+            isCheckpoint: true,
+          });
+
+          pushMessage({
+            id: `g-${Date.now() + 2}`,
+            role: "gm",
+            content: result.opening,
+            timestamp: new Date().toISOString(),
+          });
+        } catch (err) {
+          pushMessage({
+            id: `g-${Date.now() + 3}`,
+            role: "gm",
+            content: `AI 連線失敗：${err instanceof Error ? err.message : "未知錯誤"}。請檢查 API 設定後重試。`,
+            timestamp: new Date().toISOString(),
+          });
+        }
+        setLoading(false);
+      })();
+    }
+  }, [pendingGeneration, character.name, needsGeneration]);
 
     if (needsGeneration) {
       // 第一次：生成角色

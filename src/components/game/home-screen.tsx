@@ -26,12 +26,6 @@ export function HomeScreen() {
           >
             角色檔案
           </button>
-          <button
-            className="font-pixel text-[8px] px-2 py-1"
-            style={{ color: "var(--p1)", border: "1px solid var(--gold)" }}
-          >
-            設定 ⚙
-          </button>
         </div>
       </div>
 

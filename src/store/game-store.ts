@@ -17,6 +17,10 @@ interface GameState {
   pushMessage: (m: ChatMessage) => void;
   clearMessages: () => void;
 
+  // 自動生成標記
+  pendingGeneration: boolean;
+  setPendingGeneration: (b: boolean) => void;
+
   // 筆記
   notes: KeywordNote[];
   openNoteId: string | null;
@@ -32,8 +36,6 @@ interface GameState {
   // 設定面板
   showNotesPanel: boolean;
   setShowNotesPanel: (b: boolean) => void;
-  showReviewPanel: boolean;
-  setShowReviewPanel: (b: boolean) => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -47,6 +49,9 @@ export const useGameStore = create<GameState>((set) => ({
   pushMessage: (m) => set((st) => ({ messages: [...st.messages, m] })),
   clearMessages: () => set({ messages: [] }),
 
+  pendingGeneration: false,
+  setPendingGeneration: (b) => set({ pendingGeneration: b }),
+
   notes: mockNotes,
   openNoteId: null,
   setOpenNote: (id) => set({ openNoteId: id }),
@@ -59,6 +64,4 @@ export const useGameStore = create<GameState>((set) => ({
 
   showNotesPanel: false,
   setShowNotesPanel: (b) => set({ showNotesPanel: b }),
-  showReviewPanel: false,
-  setShowReviewPanel: (b) => set({ showReviewPanel: b }),
 }));

@@ -7,6 +7,8 @@ import { PixelButton, PixelDivider } from "./primitives";
 export function CreateScreen() {
   const setScreen = useGameStore((s) => s.setScreen);
   const updateCharacter = useGameStore((s) => s.updateCharacter);
+  const clearMessages = useGameStore((s) => s.clearMessages);
+  const setPendingGeneration = useGameStore((s) => s.setPendingGeneration);
 
   const [name, setName] = useState("");
   const [provider, setProvider] = useState<"gemini" | "ollama" | "openai">("gemini");
@@ -47,6 +49,8 @@ export function CreateScreen() {
       inventory: [],
       knownInfo: [],
     });
+    clearMessages();
+    setPendingGeneration(true);
     setScreen("play");
   };
 
