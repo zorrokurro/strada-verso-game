@@ -1,6 +1,6 @@
 :HL["/strada-verso-game/_next/static/chunks/0lf5py44au2ew.css","style"]
 :HL["/strada-verso-game/_next/static/chunks/3gik8_p4qysq6.css","style"]
-:HL["/strada-verso-game/_next/static/chunks/0zv9n3w_74gxn.css","style"]
+:HL["/strada-verso-game/_next/static/chunks/1ms43vfuu9phh.css","style"]
 :HL["/strada-verso-game/_next/static/media/0c8c4ded07fff55c-s.p.2tcyrya9o07vu.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/strada-verso-game/_next/static/media/3cabd365f8c28a7b-s.p.19q4vxlgtk0rb.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/strada-verso-game/_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
@@ -8,4 +8,4 @@
 :HL["/strada-verso-game/_next/static/media/a62dbdd646e89cfa-s.p.1gyhrhf92e9m1.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/strada-verso-game/_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/strada-verso-game/_next/static/media/de161955856a921d-s.p.0fxeqrss3ag9h.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"8-3gfqMlzb5N7bswnm-XR"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"qMOyJ2orYf0s6hjhEOXNg"}

@@ -1,10 +1,20 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useState, useRef, useEffect } from "react";
 import { useGameStore } from "@/store/game-store";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/lib/game-data";
+import {
+  loadAISettings,
+  generateCharacter,
+  gameChat,
+  parseStatusTags,
+  type StatusUpdates,
+} from "@/lib/ai-service";
 
+// ─────────────────────────────────────────────
+// KeywordText：解析 [[id|label]] 標記為可點擊 chip
+// ─────────────────────────────────────────────
 function KeywordText({ text }: { text: string }) {
   const setOpenNote = useGameStore((s) => s.setOpenNote);
 
@@ -45,6 +55,9 @@ function KeywordText({ text }: { text: string }) {
   );
 }
 
+// ─────────────────────────────────────────────
+// MessageBubble：單則訊息
+// ─────────────────────────────────────────────
 function MessageBubble({ msg }: { msg: ChatMessage }) {
   if (msg.role === "system") {
     if (msg.isCheckpoint) {
@@ -52,7 +65,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
         <div className="my-4 fade-in-up">
           <div className="scene-title-card">
             <div className="font-pixel text-[8px] tracking-[3px] mb-2" style={{ color: "var(--blood)" }}>
-              CHAPTER
+              CHECKPOINT
             </div>
             <div className="font-pixel text-[14px] tracking-[2px]" style={{ color: "var(--ink)" }}>
               {msg.content}
@@ -77,7 +90,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
     );
   }
 
-  if (msg.role === "narrator") {
+  if (msg.role === "gm") {
     return (
       <div className="flex gap-3 my-3 fade-in-up">
         <div
@@ -88,9 +101,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
             boxShadow: "2px 2px 0 rgba(20,9,0,.4)",
           }}
         >
-          <span className="font-pixel text-[10px]" style={{ color: "var(--gold)" }}>
-            GM
-          </span>
+          <span className="font-pixel text-[10px]" style={{ color: "var(--gold)" }}>GM</span>
         </div>
         <div
           className="flex-1 px-4 py-3 parchment-bg-deep"
@@ -100,9 +111,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
           }}
         >
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="font-pixel text-[8px]" style={{ color: "var(--blood)" }}>
-              ◆ 敘事者
-            </span>
+            <span className="font-pixel text-[8px]" style={{ color: "var(--blood)" }}>◆ 敘事者</span>
             <span className="font-body-tc text-[10px]" style={{ color: "var(--walnut)", opacity: .5 }}>
               {new Date(msg.timestamp).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
             </span>
@@ -125,9 +134,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
           boxShadow: "-2px 2px 0 rgba(20,9,0,.4)",
         }}
       >
-        <span className="font-pixel text-[8px]" style={{ color: "var(--p0)" }}>
-          21
-        </span>
+        <span className="font-pixel text-[8px]" style={{ color: "var(--p0)" }}>YOU</span>
       </div>
       <div
         className="max-w-[80%] px-4 py-3"
@@ -141,9 +148,7 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
           <span className="font-body-tc text-[10px]" style={{ color: "var(--p0)", opacity: .5 }}>
             {new Date(msg.timestamp).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
           </span>
-          <span className="font-pixel text-[8px]" style={{ color: "var(--gold)" }}>
-            ◇ 行動
-          </span>
+          <span className="font-pixel text-[8px]" style={{ color: "var(--gold)" }}>◇ 行動</span>
         </div>
         <p className="player-action text-right">{msg.content}</p>
       </div>
@@ -151,52 +156,158 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
   );
 }
 
+// ─────────────────────────────────────────────
+// GameChat：對話區
+// ─────────────────────────────────────────────
 export function GameChat() {
   const messages = useGameStore((s) => s.messages);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   return (
-    <div className="fancy-scroll h-full overflow-y-auto px-4 py-4">
+    <div ref={scrollRef} className="fancy-scroll h-full overflow-y-auto px-4 py-4">
       <div className="max-w-3xl mx-auto">
         {messages.map((m) => (
           <MessageBubble key={m.id} msg={m} />
         ))}
-        <div className="flex items-center gap-2 mt-2 opacity-60">
-          <div
-            className="w-2 h-4"
-            style={{ background: "var(--gold)", animation: "blink 1s steps(1) infinite" }}
-          />
-          <span className="font-pixel text-[7px]" style={{ color: "var(--walnut)" }}>
-            敘事者正在構思下一步...
-          </span>
-        </div>
       </div>
     </div>
   );
 }
 
+// ─────────────────────────────────────────────
+// ActionInput：純文字行動輸入
+// ─────────────────────────────────────────────
 export function ActionInput() {
   const [value, setValue] = useState("");
+  const [loading, setLoading] = useState(false);
   const pushMessage = useGameStore((s) => s.pushMessage);
+  const updateCharacter = useGameStore((s) => s.updateCharacter);
+  const character = useGameStore((s) => s.character);
+  const messages = useGameStore((s) => s.messages);
 
-  const submit = () => {
+  const applyStatusUpdates = (updates: StatusUpdates) => {
+    const patch: Record<string, unknown> = {};
+    if (updates.health) patch.health = { label: updates.health, pct: updates.health === "良好" ? 100 : updates.health === "受傷" ? 60 : updates.health === "重傷" ? 30 : updates.health === "瀕死" ? 10 : 80 };
+    if (updates.mood) patch.mood = { label: updates.mood, pct: updates.mood === "平靜" ? 70 : updates.mood === "緊張" ? 50 : updates.mood === "憤怒" ? 80 : updates.mood === "悲傷" ? 40 : updates.mood === "恐懼" ? 30 : 20 };
+    if (updates.currency !== undefined) patch.currency = updates.currency;
+    if (updates.abilityStatus) patch.abilityStatus = updates.abilityStatus;
+    if (updates.region) patch.region = updates.region;
+    if (updates.addItems.length > 0) {
+      const newInv = [...character.inventory];
+      updates.addItems.forEach((name) => {
+        if (!newInv.find((i) => i.name === name)) newInv.push({ name, qty: 1 });
+      });
+      patch.inventory = newInv;
+    }
+    if (updates.removeItems.length > 0) {
+      patch.inventory = character.inventory.filter((i) => !updates.removeItems.includes(i.name));
+    }
+    if (updates.addKnowledge.length > 0) {
+      patch.knownInfo = [...character.knownInfo, ...updates.addKnowledge];
+    }
+    updateCharacter(patch);
+  };
+
+  const submit = async () => {
     const v = value.trim();
-    if (!v) return;
-    pushMessage({
-      id: `p-${Date.now()}`,
-      role: "player",
-      content: v,
-      timestamp: new Date().toISOString(),
-    });
+    if (!v || loading) return;
+
+    setLoading(true);
     setValue("");
-    setTimeout(() => {
+
+    // 判斷是否需要生成角色
+    const needsGeneration = !character.era;
+
+    if (needsGeneration) {
+      // 第一次：生成角色
       pushMessage({
-        id: `g-${Date.now()}`,
-        role: "narrator",
-        content: "（敘事者沉吟片刻，繼續推進故事...）你話語剛落，空氣似乎凝滯了。周圍的聲音變得遙遠。你的下一步選擇，將決定接下來的方向。",
+        id: `p-${Date.now()}`,
+        role: "player",
+        content: v,
         timestamp: new Date().toISOString(),
       });
-    }, 1200);
+
+      pushMessage({
+        id: `sys-${Date.now()}`,
+        role: "system",
+        content: "AI 正在生成你的角色和世界...",
+        timestamp: new Date().toISOString(),
+      });
+
+      try {
+        const settings = loadAISettings();
+        const result = await generateCharacter(v, settings);
+
+        // 更新角色
+        updateCharacter(result.character);
+
+        // 顯示開場
+        pushMessage({
+          id: `sys-${Date.now() + 1}`,
+          role: "system",
+          content: `${result.character.era} · ${result.character.region}`,
+          timestamp: new Date().toISOString(),
+          sceneTitle: result.character.era || "序章",
+          isCheckpoint: true,
+        });
+
+        pushMessage({
+          id: `g-${Date.now() + 2}`,
+          role: "gm",
+          content: result.opening,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
+        pushMessage({
+          id: `g-${Date.now() + 3}`,
+          role: "gm",
+          content: `AI 連線失敗：${err instanceof Error ? err.message : "未知錯誤"}。請檢查 API 設定後重試。`,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    } else {
+      // 正常遊戲對話
+      pushMessage({
+        id: `p-${Date.now()}`,
+        role: "player",
+        content: v,
+        timestamp: new Date().toISOString(),
+      });
+
+      try {
+        const settings = loadAISettings();
+        const response = await gameChat(v, character, messages, settings);
+
+        // 解析狀態標記
+        const updates = parseStatusTags(response);
+        applyStatusUpdates(updates);
+
+        pushMessage({
+          id: `g-${Date.now() + 1}`,
+          role: "gm",
+          content: updates.cleanText,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
+        pushMessage({
+          id: `g-${Date.now() + 1}`,
+          role: "gm",
+          content: `AI 連線失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
+
+    setLoading(false);
   };
+
+  const needsGeneration = !character.era;
 
   return (
     <div
@@ -210,10 +321,10 @@ export function ActionInput() {
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-2 mb-2">
           <span className="font-pixel text-[7px]" style={{ color: "var(--gold)" }}>
-            ▸ 行動輸入
+            {needsGeneration ? "▸ 輸入你的名字" : "▸ 行動輸入"}
           </span>
           <span className="font-body-tc text-[10px]" style={{ color: "var(--p1)", opacity: .6 }}>
-            描述你想做的事，敘事者會判定結果
+            {needsGeneration ? "AI 將根據名字生成你的角色" : "描述你想做的事，AI GM 會判定結果"}
           </span>
         </div>
         <div className="flex gap-2">
@@ -226,8 +337,9 @@ export function ActionInput() {
                 submit();
               }
             }}
-            placeholder="例：我走進書店，試著不讓自己的情緒顏色外洩..."
+            placeholder={needsGeneration ? "例：莉亞" : "例：我檢查實驗體的狀況..."}
             rows={2}
+            disabled={loading}
             className={cn(
               "flex-1 px-3 py-2 resize-none fancy-scroll",
               "font-body-tc text-[14px]",
@@ -238,21 +350,22 @@ export function ActionInput() {
               border: "2px solid var(--gold)",
               color: "var(--p0)",
               boxShadow: "inset 0 0 0 1px var(--ink)",
+              opacity: loading ? 0.5 : 1,
             }}
           />
           <button
             onClick={submit}
-            disabled={!value.trim()}
+            disabled={!value.trim() || loading}
             className="pixel-btn pixel-btn-primary self-stretch px-5"
-            style={{ minHeight: "100%" }}
+            style={{ minHeight: "100%", opacity: loading || !value.trim() ? 0.5 : 1 }}
           >
-            <span className="font-pixel text-[10px]">送出</span>
+            <span className="font-pixel text-[10px]">{loading ? "..." : "送出"}</span>
             <span className="font-body-tc text-[10px] opacity-70">↵</span>
           </button>
         </div>
         <div className="flex items-center justify-between mt-1.5">
           <span className="font-body-tc text-[10px]" style={{ color: "var(--p1)", opacity: .5 }}>
-            Enter 送出 · Shift+Enter 換行
+            {loading ? "AI 正在回應..." : "Enter 送出 · Shift+Enter 換行"}
           </span>
           <span className="font-pixel text-[7px]" style={{ color: "var(--gold)", opacity: .6 }}>
             {value.length} 字
