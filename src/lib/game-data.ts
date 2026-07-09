@@ -1,4 +1,6 @@
-export type KeywordType = "person" | "location" | "organization" | "ability";
+// 遊戲資料型別 + Mock 資料（斯特拉達·維爾索世界觀）
+
+export type KeywordType = "npc" | "location" | "item" | "faction" | "era";
 
 export interface KeywordNote {
   id: string;
@@ -9,7 +11,7 @@ export interface KeywordNote {
   firstSeen: string;
 }
 
-export type MessageRole = "narrator" | "player" | "system";
+export type MessageRole = "gm" | "player" | "system";
 
 export interface ChatMessage {
   id: string;
@@ -22,171 +24,223 @@ export interface ChatMessage {
 
 export interface CharacterSheet {
   name: string;
-  codename: string;
   gender: string;
   age: number;
-  organization: string;
-  background: string;
-  appearance: string;
-  // 右腦能力
-  brainStage: number;
-  brainStages: {
-    label: string;
-    unlocked: boolean;
-  }[];
-  // 能力數值
-  perception: number;
-  control: number;
-  stability: number;
-  knowledge: number;
-  awareness: number;
-  willpower: number;
-  // 生理狀態
-  hp: { current: number; max: number };
-  // 盧恩薄片
-  runeFragment: boolean;
-  // 物品
+  era: string;
+  eraYear: string;
+  region: string;
+  socialClass: string;
+  familyBackground: string;
+  occupation: string;
+  // 能力
+  abilityStatus: "普通人" | "微覺醒" | "能力者";
+  abilityType?: string;
+  // 左腦（理性面）
+  leftBrain: {
+    reason: number;    // 理性
+    memory: number;    // 記憶
+    language: number;  // 語言
+    logic: number;     // 邏輯
+    self: number;      // 自我邊界
+  };
+  // 右腦（直覺面）
+  rightBrain: {
+    perception: number;  // 感知
+    imagination: number; // 想像
+    intuition: number;   // 直覺
+    emotion: number;     // 情緒
+    insight: number;     // 洞察
+  };
+  // 狀態
+  health: { label: string; pct: number };
+  sanity: { current: number; max: number };
+  mood: { label: string; pct: number };
+  // 資金（阿爾納）
+  currency: number;
   inventory: { name: string; qty: number; desc?: string }[];
+  knownInfo: string[];
 }
 
+// ── 世界觀常數 ──
+export const ERAS = [
+  "拂曉紀",
+  "獵巫紀",
+  "教團紀",
+  "黎明紀",
+  "裂變前夜",
+  "後崩解時代",
+] as const;
+
+export const REGIONS = [
+  "諾德蘭",
+  "韋斯特海岸",
+  "梅札海",
+  "赫爾沙漠",
+  "阿札德高地",
+  "昆嵐山脈",
+  "南嶋群島",
+] as const;
+
+export const SOCIAL_CLASSES = [
+  "貴族",
+  "教士",
+  "商人",
+  "工匠",
+  "農民",
+  "傭兵",
+  "學者",
+  "遊民",
+] as const;
+
+export const ABILITY_STATUSES = ["普通人", "微覺醒", "能力者"] as const;
+
+// ── Mock 角色 ──
 export const mockCharacter: CharacterSheet = {
-  name: "實驗體21號",
-  codename: "21-γ",
-  gender: "模糊",
-  age: 16,
-  organization: "回聲之民",
-  background: "零號計劃首個存活體，從有記憶以來就在認知科學局第十四區實驗室。6歲學會隱瞞能力。世界觀來自童話故事。",
-  appearance: "黑髮黑瞳，皮膚蒼白，身高約170cm，體型清瘦。左手腕內側有實驗體編號燙印「21」。常穿著灰色連帽外套。",
-  brainStage: 1,
-  brainStages: [
-    { label: "情緒顏色感知", unlocked: true },
-    { label: "微物理干涉", unlocked: false },
-    { label: "集體意識感知", unlocked: false },
-    { label: "概率觸及", unlocked: false },
-  ],
-  perception: 8,
-  control: 3,
-  stability: 5,
-  knowledge: 4,
-  awareness: 7,
-  willpower: 6,
-  hp: { current: 100, max: 100 },
-  runeFragment: true,
+  name: "莉亞·艾克曼",
+  gender: "女",
+  age: 24,
+  era: "裂變前夜",
+  eraYear: "AE 1162",
+  region: "韋斯特海岸",
+  socialClass: "學者",
+  familyBackground: "商人家庭出身，父親經營進口貿易",
+  occupation: "認知科學局見習研究員",
+  abilityStatus: "微覺醒",
+  abilityType: "直覺閃現",
+  leftBrain: {
+    reason: 14,
+    memory: 13,
+    language: 15,
+    logic: 14,
+    self: 12,
+  },
+  rightBrain: {
+    perception: 13,
+    imagination: 11,
+    intuition: 16,
+    emotion: 10,
+    insight: 14,
+  },
+  health: { label: "良好", pct: 85 },
+  sanity: { current: 92, max: 100 },
+  mood: { label: "緊張", pct: 60 },
+  currency: 35,
   inventory: [
-    { name: "盧恩薄片", qty: 1, desc: "刻有奇異符號的金屬薄片，博士交給你的唯一物品" },
-    { name: "灰色連帽外套", qty: 1, desc: "逃亡時撿來的，口袋裡永遠裹著盧恩薄片" },
-    { name: "實驗體紀錄碎片", qty: 3, desc: "從實驗室帶出的文件殘頁" },
+    { name: "科學局實習證", qty: 1, desc: "銅製胸針，刻有量測組徽記" },
+    { name: "筆記本", qty: 1, desc: "皮面裝訂，記滿了觀測數據" },
+    { name: "阿爾納銅幣", qty: 35 },
+    { name: "赫爾格銀幣", qty: 1 },
+    { name: "懷錶", qty: 1, desc: "父親送的離別禮物" },
+  ],
+  knownInfo: [
+    "能力是真實存在的，但科學局否認其「超自然」本質",
+    "崩塌區的物理法則不穩定，能力者在那裡更容易失控",
+    "回聖會的盧恩文字可以作為能力觸發的媒介",
   ],
 };
 
+// ── Mock 筆記 ──
 export const mockNotes: KeywordNote[] = [
   {
-    id: "maria",
-    type: "person",
-    title: "瑪麗亞·維爾納博士",
-    summary: "認知科學局強化組核心研究員，零號計劃主導者。你的創造者、救贖者、被迫合作者。",
-    details: "約60歲，白髮盤起，深藍眼。常穿白大褂，袖口有燒傷疤痕。表層冷靜客觀，深層藏著被壓抑的愧疚與母性衝動。她叫你「孩子」，但在局方面前稱你「觀察對象」。Ch.01爆炸中偽造死亡，實則被軟禁繼續研究。",
-    firstSeen: "實驗室",
+    id: "resonant-order",
+    type: "faction",
+    title: "回聖會",
+    summary: "崇拜能力的宗教組織，使用盧恩文字作為觸發工具。",
+    details: "俗稱先知教團、盧恩會。成立於 AE 487 年。核心信仰：右腦能力是「人類被遺忘的神聖面」，左腦是枷鎖，退位是回歸。內部有盧恩塔（研究）、黎明團（武力）、靜默修會（冥想）、先知之影（情報）四個子組織。每任先知最終消散，教團永遠無法擁有穩定領導者。",
+    firstSeen: "序章·實驗室的回聲",
   },
   {
     id: "cognitive-bureau",
-    type: "organization",
+    type: "faction",
     title: "認知科學局",
-    summary: "試圖量化、複製、武器化右腦能力的政府機構。把你當作實驗成果而非人。",
-    details: "原名「科學之光」。強化組負責能力者研究，清理組派出暗紅色者追蹤逃脫的實驗體。零號計劃真實目的：培育「不會同化的右腦全開體」作為戰略兵器。21號之前20個實驗體全數同化或處決。",
-    firstSeen: "實驗室",
+    summary: "研究能力的政府機構，試圖量化、複製、武器化。",
+    details: "俗稱科學之光、白袍。成立於 AE 1050 年。核心信仰：右腦能力是「人類演化的下一步」，必須由科學方法理解。能力者不是人，是「數據來源」與「戰略資源」。內部有量測組（觀測）、強化組（實驗）、管控組（執行）三方博弈。你所屬的單位。",
+    firstSeen: "序章·實驗室的回聲",
   },
   {
-    id: "echo-people",
-    type: "organization",
+    id: "collapse-zone",
+    type: "location",
+    title: "崩塌區",
+    summary: "物理法則不穩定的區域，能力者在這裡更容易失控。",
+    details: "全球分散的異常區域。能力者在崩塌區內的覺醒機率大幅提高，但同時失控風險也成倍增加。回聲之民在崩塌區邊緣建立了庇護所。殘響碎片是從崩塌區中提煉的能力者意識殘片，有極高的研究價值。",
+    firstSeen: "第一章·邊緣地帶",
+  },
+  {
+    id: "echo-folk",
+    type: "faction",
     title: "回聲之民",
-    summary: "被三方勢力排斥的地下能力者網絡，以節點制運作。",
-    details: "無統一領導，維護「轉生路線」，讓即將同化的能力者以轉生者身分繼續存在。山谷節點是重要據點。亮紅色男人、亮藍綠女孩、銀白色老人皆屬於此。",
-    firstSeen: "第二幕·第一次接觸",
+    summary: "地下庇護網絡，唯一共識是「活著」。",
+    details: "四大勢力中最神祕的一支。收容被各方勢力追捕的能力者。掌握「轉生」技術——將能力者的意識碎片植入新身體。認知科學局一直在追蹤他們的轉生路線，認為那是最有價值的技術。",
+    firstSeen: "第一章·邊緣地帶",
   },
   {
-    id: "rune-tablet",
-    type: "ability",
-    title: "盧恩薄片",
-    summary: "刻有盧恩文字的金屬薄片，能幫助穩定右腦操控狀態。",
-    details: "不是魔法，是心理學與神經科學的交叉點。盧恩文字具有極強的「心理暗示激活效果」，能幫助右腦使用者進入操控狀態。博士在Ch.01塞入你手中的「刻有奇異符號的金屬薄片」。",
-    firstSeen: "實驗室",
+    id: "experiment-21",
+    type: "npc",
+    title: "實驗體21號",
+    summary: "認知科學局最早期的實驗對象，左腦已接近歸零。",
+    details: "性別不明，年齡不明。身體有時會呈現半透明狀態。在認知科學局的地下設施中被囚禁超過 20 年。你被派去觀測他，每次靠近時都會感覺到——不是用五官，是用某種更直接的方式——他的存在正在消融。",
+    firstSeen: "序章·實驗室的回聲",
   },
   {
-    id: "lin",
-    type: "person",
-    title: "林",
-    summary: "書店店員，第一個不把你當實驗體的人。教會你「溫度」與「信任」。",
-    details: "普通人，沒有右腦能力。與祖母同住。給予你第一個家的感覺。他的情緒顏色是暖橘色——善意、溫暖、無條件接納。在Ch.05被暗紅色者殺害。",
-    firstSeen: "第二幕·第一次接觸",
+    id: "runes",
+    type: "item",
+    title: "盧恩文字",
+    summary: "回聖會的觸發工具，可以降低能力覺醒的門檻。",
+    details: "刻在石板或金屬上的符號系統。回聖會聲稱是「先知的遺產」。認知科學局的量測組發現盧文字確實能改變局部意識場的結構，但機制不明。你曾被要求觀測一名修士使用盧文字時的腦波變化——那次觀測的數據至今被列為機密。",
+    firstSeen: "序章·實驗室的回聲",
   },
 ];
 
+// ── Mock 對話歷史 ──
 export const mockMessages: ChatMessage[] = [
   {
     id: "m1",
     role: "system",
-    content: "第二幕 · 第一次接觸人類",
-    timestamp: "2026-03-15T20:00:00Z",
-    sceneTitle: "第二幕",
+    content: "序章·實驗室的回聲",
+    timestamp: "2026-07-10T20:00:00Z",
+    sceneTitle: "序章",
     isCheckpoint: true,
   },
   {
     id: "m2",
-    role: "narrator",
-    content: "雨停了。你站在街角的阴影裡，帽簷壓得很低。這是你逃出實驗室後的第三天。胃裡空空的，左手腕的燙印还在隱隱作痛。路過的人身上都帶著顏色——你已經學會不去看。但有個人不一樣。[[lin|書店]]的門打開時，裡面走出來的老人身上帶著[[maria|暖橘色]]。你已經很久沒見過這種顏色了。",
-    timestamp: "2026-03-15T20:00:05Z",
+    role: "gm",
+    content: "實驗室的燈光慘白，感測器的數據在螢幕上跳動。[[experiment-21|實驗體21號]]坐在房間中央的金屬椅上，半透明的身體在日光燈下幾乎看不見輪廓。你的觀測日誌已經寫了三頁——今天他的左腦指數又下降了 0.3%。[[cognitive-bureau|科學局]]的主管會很高興。但你不高興。你注意到他一直在看著你——不是用眼睛，是用某種你無法描述的方式。彷彿他知道你在想什麼。",
+    timestamp: "2026-07-10T20:00:05Z",
   },
   {
     id: "m3",
     role: "player",
-    content: "我猶豫了一下，還是走向書店。門上掛著「營業中」的木牌。",
-    timestamp: "2026-03-15T20:01:12Z",
+    content: "我放下觀測板，看著他。「你知道我在這裡。」",
+    timestamp: "2026-07-10T20:01:12Z",
   },
   {
     id: "m4",
-    role: "narrator",
- content: "推開門，風鈴響了。一個年輕男人從書架後面抬起頭。他身上的顏色是安靜的藍綠色——[[lin|林]]。他看了你一眼，沒有露出大多數人會有的那種表情。不是恐懼，不是厭惡。只是平靜地說：「歡迎。想找什麼書？」",
-    timestamp: "2026-03-15T20:01:30Z",
+    role: "gm",
+    content: "他的嘴唇動了，但聲音不是從那裡來的。它直接出現在你的腦海裡：「你也在消融，只是你自己還不知道。」感測器突然發出刺耳的警報——[[experiment-21|他的右腦指數正在飆升。]]",
+    timestamp: "2026-07-10T20:01:30Z",
   },
   {
     id: "m5",
     role: "system",
-    content: "情緒感知（被動）：林 — 藍綠色（安靜、安全、理性守護）",
-    timestamp: "2026-03-15T20:01:35Z",
+    content: "直覺閃現：你的身體感覺到某種不對勁——不是恐懼，是一種更原始的東西。",
+    timestamp: "2026-07-10T20:01:35Z",
   },
   {
     id: "m6",
-    role: "narrator",
-    content: "你不知道該怎麼回答。在實驗室裡，沒有人問過你「想要什麼」。你習慣了被觀察、被記錄、被分析。但眼前這個人只是等著，不急。他的藍綠色很穩定，沒有裂縫，沒有暗紅。你第一次覺得，也許可以試著開口。",
-    timestamp: "2026-03-15T20:01:40Z",
+    role: "gm",
+    content: "你突然看見了——不是用眼睛——實驗室牆壁的結構。每一根鋼筋、每一條管線、每一粒混凝土中的氣泡，像藍圖一樣展開在你面前。然後你聽見了他的聲音：「[[runes|這不是第一次了，莉亞。你上次來的時候，也看見了。]]」你的鼻子開始流血。",
+    timestamp: "2026-07-10T20:01:40Z",
   },
   {
     id: "m7",
     role: "player",
-    content: "「……有沒有那種，小孩會喜歡的故事書？」",
-    timestamp: "2026-03-15T20:02:20Z",
+    content: "我用袖子擦掉鼻血，沒有後退。「你說的『上次』是什麼意思？」",
+    timestamp: "2026-07-10T20:02:20Z",
   },
   {
     id: "m8",
-    role: "narrator",
-    content: "他笑了。藍綠色微微發亮。「有啊。」他從架上抽出一本舊舊的童話集，封面上畫著一棵大樹。「這本不錯。很多人小時候都看過。」你接過來，指尖觸到書頁的瞬間，[[rune-tablet|盧恩薄片]]在口袋裡微微發燙。你不知道為什麼。但你決定留下來。",
-    timestamp: "2026-03-15T20:02:35Z",
+    role: "gm",
+    content: "警報聲突然停止了。燈光閃爍了三次，然後全部熄滅。在黑暗中，[[experiment-21|21號]]的身體發出微弱的藍光——像是一個正在燃燒的幽靈。他的聲音再次直接進入你的腦海：「你每次都問同樣的問題。而我每次都只能給你同樣的答案——你看見的不是未來，是[[collapse-zone|崩塌區]]的裂縫正在打開。」黑暗中，你感覺到地面在微微顫動。",
+    timestamp: "2026-07-10T20:02:35Z",
   },
 ];
-
-export const brainStageLabels = [
-  { zh: "情緒顏色感知", abbr: "EP", desc: "被動感知他人情緒狀態為顏色" },
-  { zh: "微物理干涉", abbr: "PC", desc: "需要學習對應物理知識才能使用" },
-  { zh: "集體意識感知", abbr: "CA", desc: "感受到人群的情緒場" },
-  { zh: "概率觸及", abbr: "PR", desc: "接近預知，但伴隨自我瓦解" },
-];
-
-export const statLabels: Record<string, { zh: string; abbr: string }> = {
-  perception: { zh: "感知", abbr: "EP" },
-  control: { zh: "控制", abbr: "CT" },
-  stability: { zh: "穩定", abbr: "ST" },
-  knowledge: { zh: "知識", abbr: "KN" },
-  awareness: { zh: "覺察", abbr: "AW" },
-  willpower: { zh: "意志", abbr: "WP" },
-};

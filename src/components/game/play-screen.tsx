@@ -9,6 +9,7 @@ import { TutorialOverlay } from "./tutorial-overlay";
 import { cn } from "@/lib/utils";
 
 export function PlayScreen() {
+  const character = useGameStore((s) => s.character);
   const setScreen = useGameStore((s) => s.setScreen);
   const showNotesPanel = useGameStore((s) => s.showNotesPanel);
   const setShowNotesPanel = useGameStore((s) => s.setShowNotesPanel);
@@ -20,6 +21,7 @@ export function PlayScreen() {
 
   return (
     <div className="h-screen w-screen overflow-hidden dark-bg flex flex-col">
+      {/* 頂部狀態列 */}
       <header
         className="flex-shrink-0 flex items-center justify-between px-4 py-2"
         style={{
@@ -33,15 +35,15 @@ export function PlayScreen() {
             className="font-pixel text-[8px] flex items-center gap-1"
             style={{ color: "var(--gold)" }}
           >
-            ◂ 實驗體21號
+            ◂ STRADA·VERSO
           </button>
           <div className="w-px h-4" style={{ background: "var(--gold)", opacity: .4 }} />
           <div className="flex items-center gap-2">
             <span className="font-pixel text-[7px]" style={{ color: "var(--p1)", opacity: .6 }}>
-              ACT
+              ERA
             </span>
             <span className="font-body-tc text-[12px]" style={{ color: "var(--p0)" }}>
-              第二幕 · 第一次接觸人類
+              {character.era}
             </span>
           </div>
           <div className="w-px h-4" style={{ background: "var(--gold)", opacity: .4 }} />
@@ -50,7 +52,7 @@ export function PlayScreen() {
               LOCATION
             </span>
             <span className="font-body-tc text-[12px]" style={{ color: "var(--gold)" }}>
-              街角書店
+              認知科學局地下設施 · 觀測室
             </span>
           </div>
         </div>
@@ -63,10 +65,10 @@ export function PlayScreen() {
             ↺ 回顧
           </TopButton>
           <TopButton onClick={restartTutorial}>
-            ? 引導
+            ? 教學
           </TopButton>
           <TopButton onClick={() => setScreen("character")}>
-            ▤ 檔案
+            ▤ 角色
           </TopButton>
           <TopButton>
             ☰ 儲存
@@ -74,7 +76,9 @@ export function PlayScreen() {
         </div>
       </header>
 
+      {/* 主內容：左右分割 */}
       <div className="flex-1 flex overflow-hidden">
+        {/* 左側 60%：對話區 */}
         <div
           className="flex-1 flex flex-col"
           style={{
@@ -82,22 +86,33 @@ export function PlayScreen() {
             borderRight: "3px solid var(--ink)",
           }}
         >
+          {/* 對話歷史 */}
           <div className="flex-1 overflow-hidden">
             <GameChat />
           </div>
+          {/* 行動輸入 */}
           <ActionInput />
         </div>
 
+        {/* 右側 40%：角色卡面板 */}
         <div className="w-[40%] min-w-[320px] max-w-[440px] flex-shrink-0">
           <CharacterSheetPanel />
         </div>
       </div>
 
+      {/* 筆記面板（slide-in 或詳情 modal） */}
       {(showNotesPanel || openNoteId) && <NotesPanel />}
 
+      {/* 劇情回顧面板 */}
       {showReviewPanel && <ReviewPanel onClose={() => setShowReviewPanel(false)} />}
 
+      {/* 教學 overlay */}
       {showTutorial && <TutorialOverlay />}
+
+      {/* 角色變動提示（demo 用） */}
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
+        {/* 預留空間 */}
+      </div>
     </div>
   );
 }
@@ -127,6 +142,9 @@ function TopButton({
   );
 }
 
+// ─────────────────────────────────────────────
+// 劇情回顧面板
+// ─────────────────────────────────────────────
 function ReviewPanel({ onClose }: { onClose: () => void }) {
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center" style={{ background: "rgba(8,4,10,.9)" }}>
@@ -140,7 +158,7 @@ function ReviewPanel({ onClose }: { onClose: () => void }) {
               ◆ STORY REVIEW
             </div>
             <div className="font-body-tc text-[11px] mt-1" style={{ color: "var(--walnut)", opacity: .7 }}>
-              AI 自動整理的章節摘要
+              AI 自動整理的故事摘要
             </div>
           </div>
           <button
@@ -155,21 +173,9 @@ function ReviewPanel({ onClose }: { onClose: () => void }) {
         <div className="flex-1 overflow-y-auto fancy-scroll px-6 py-4">
           <ChapterSummary
             chapter="序章"
-            title="實驗室"
-            summary="你從有記憶以來就在認知科學局第十四區實驗室。文件記錄「3-γ 到 19-γ」，20號之前皆失敗。瑪麗亞博士是唯一的人類接觸。某天，實驗室發生爆炸。"
-            highlights={["實驗室生活", "盧恩薄片", "爆炸逃脫"]}
-          />
-          <ChapterSummary
-            chapter="第一幕"
-            title="逃離"
-            summary="博士在爆炸中救了你，事後配合局方偽造死亡。你帶著盧恩薄片與假遺囑逃出實驗室。第一次接觸外面的世界。"
-            highlights={["博士的真相", "第一次看见天空", "學會隱藏能力"]}
-          />
-          <ChapterSummary
-            chapter="第二幕"
-            title="第一次接觸人類"
-            summary="你來到街角的書店，遇到林和阿嬤。他們的顏色是暖橘色和藍綠色——你從未見過的溫暖。但暗紅色者已經開始追蹤你。"
-            highlights={["遇見林", "第一次理解信任", "暗紅色的影子"]}
+            title="實驗室的回聲"
+            summary="你被派去觀測實驗體21號——認知科學局最早的實驗對象。他坐在金屬椅上，半透明的身體在日光燈下幾乎看不見輪廓。你的觀測日誌已經寫了三頁。但今天不一樣——他開始對你說話。"
+            highlights={["抵達觀測室", "認識實驗體21號", "聽見無聲的聲音"]}
             current
           />
         </div>

@@ -2,19 +2,22 @@
 
 import { useGameStore } from "@/store/game-store";
 import { PixelDivider } from "./primitives";
+import { cn } from "@/lib/utils";
 
 const typeIcons: Record<string, string> = {
-  person: "人物",
+  npc: "人物",
   location: "地點",
-  organization: "組織",
-  ability: "能力",
+  item: "物品",
+  faction: "勢力",
+  era: "時代",
 };
 
 const typeColors: Record<string, string> = {
-  person: "var(--blood)",
+  npc: "var(--blood)",
   location: "var(--gold)",
-  organization: "#2a6bb8",
-  ability: "var(--walnut)",
+  item: "#2a6bb8",
+  faction: "var(--walnut)",
+  era: "#6b4a8a",
 };
 
 export function NotesPanel() {
@@ -25,6 +28,7 @@ export function NotesPanel() {
 
   const openNote = notes.find((n) => n.id === openNoteId);
 
+  // 若有指定 openNoteId，直接顯示該則筆記詳情
   if (openNote) {
     return (
       <div
@@ -35,6 +39,7 @@ export function NotesPanel() {
           className="pixel-frame-dark parchment-bg-deep max-w-2xl w-full mx-6 max-h-[85vh] flex flex-col"
           style={{ boxShadow: "0 0 60px rgba(196,144,8,.4)" }}
         >
+          {/* 標題列 */}
           <div
             className="flex items-center justify-between px-5 py-3"
             style={{ borderBottom: "2px solid var(--ink)", background: "rgba(20,9,0,.85)" }}
@@ -73,6 +78,7 @@ export function NotesPanel() {
             </button>
           </div>
 
+          {/* 內容 */}
           <div className="flex-1 overflow-y-auto fancy-scroll px-6 py-5">
             <div className="text-eyebrow mb-2">SUMMARY · 摘要</div>
             <p className="font-body-tc text-[14px] mb-5" style={{ color: "var(--blood)", fontStyle: "italic", lineHeight: 1.7 }}>
@@ -88,20 +94,21 @@ export function NotesPanel() {
 
             <div className="mt-6 p-3" style={{ background: "rgba(112,14,14,.08)", border: "1px dashed var(--blood)" }}>
               <div className="font-pixel text-[7px] mb-1" style={{ color: "var(--blood)" }}>
-                ▸ 敘事者提示
+                ▸ GM 提示
               </div>
               <div className="font-body-tc text-[12px]" style={{ color: "var(--walnut)", lineHeight: 1.6 }}>
-                這個條目已加入你的筆記。在對話中提到相關事物時，敘事者會自動參照此資訊。
+                這個條目已加入你的筆記。在對話中提到相關事物時，AI GM 會自動參照此資訊。
               </div>
             </div>
           </div>
 
+          {/* 底部 */}
           <div className="flex items-center justify-between px-5 py-3" style={{ borderTop: "2px solid var(--ink)" }}>
             <button
               onClick={() => setOpenNote(null)}
               className="pixel-btn pixel-btn-ghost text-[8px] py-2"
             >
-              ◂ 返回列表
+              ◂ 返回筆記列表
             </button>
             <button
               onClick={() => {
@@ -110,7 +117,7 @@ export function NotesPanel() {
               }}
               className="pixel-btn text-[8px] py-2"
             >
-              關閉面板
+              關閉筆記面板
             </button>
           </div>
         </div>
@@ -118,6 +125,7 @@ export function NotesPanel() {
     );
   }
 
+  // 筆記列表
   return (
     <div
       className="absolute top-0 right-0 bottom-0 z-40 scale-in"
