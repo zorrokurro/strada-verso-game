@@ -1,4 +1,4 @@
 :HL["/strada-verso-game/_next/static/chunks/0lf5py44au2ew.css","style"]
 :HL["/strada-verso-game/_next/static/chunks/3gik8_p4qysq6.css","style"]
 :HL["/strada-verso-game/_next/static/chunks/3eraduussgwxm.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"FHonVp3zUYmYDLDbeH_7M"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"MHr_8N6y7-DbjlZBPQcHK"}
