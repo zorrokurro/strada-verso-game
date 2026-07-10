@@ -216,19 +216,9 @@ export function ActionInput() {
     updateCharacter(patch);
   };
 
-  const submit = async () => {
-    const v = value.trim();
-    if (!v || loading) return;
-
-    setLoading(true);
-    setValue("");
-
-    // 判斷是否需要生成角色
-  const needsGeneration = !character.era;
-
   // 自動生成：從建立角色畫面進來時，自動觸發 AI 生成
   useEffect(() => {
-    if (pendingGeneration && character.name && needsGeneration && !loading) {
+    if (pendingGeneration && character.name && !character.era && !loading) {
       setPendingGeneration(false);
       setLoading(true);
 
@@ -278,10 +268,18 @@ export function ActionInput() {
         setLoading(false);
       })();
     }
-  }, [pendingGeneration, character.name, needsGeneration]);
+  }, [pendingGeneration, character.name, character.era, loading]);
+
+  const submit = async () => {
+    const v = value.trim();
+    if (!v || loading) return;
+
+    setLoading(true);
+    setValue("");
+
+    const needsGeneration = !character.era;
 
     if (needsGeneration) {
-      // 第一次：生成角色
       pushMessage({
         id: `p-${Date.now()}`,
         role: "player",
@@ -299,11 +297,8 @@ export function ActionInput() {
       try {
         const settings = loadAISettings();
         const result = await generateCharacter(v, settings);
-
-        // 更新角色
         updateCharacter(result.character);
 
-        // 顯示開場
         pushMessage({
           id: `sys-${Date.now() + 1}`,
           role: "system",
@@ -328,7 +323,6 @@ export function ActionInput() {
         });
       }
     } else {
-      // 正常遊戲對話
       pushMessage({
         id: `p-${Date.now()}`,
         role: "player",
@@ -340,7 +334,6 @@ export function ActionInput() {
         const settings = loadAISettings();
         const response = await gameChat(v, character, messages, settings);
 
-        // 解析狀態標記
         const updates = parseStatusTags(response);
         applyStatusUpdates(updates);
 
