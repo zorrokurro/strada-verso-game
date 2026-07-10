@@ -63,7 +63,7 @@ export function TutorialOverlay() {
               教學 · TUTORIAL
             </span>
           </div>
-          <span className="font-pixel text-[9px]" style={{ color: "var(--p1)" }}>
+          <span className="font-pixel text-[9px]" style={{ color: "var(--p0)" }}>
             {step + 1} / {STEPS.length}
           </span>
         </div>
@@ -92,7 +92,7 @@ export function TutorialOverlay() {
           </div>
           <p
             className="font-body-tc text-[14px]"
-            style={{ color: "var(--p1)", lineHeight: 1.8 }}
+            style={{ color: "var(--p0)", lineHeight: 1.8 }}
           >
             {current.body}
           </p>
@@ -106,7 +106,7 @@ export function TutorialOverlay() {
           <button
             onClick={closeTutorial}
             className="font-pixel text-[9px] px-4 py-2 hover:opacity-100 transition-opacity"
-            style={{ color: "var(--p1)", opacity: 0.7 }}
+            style={{ color: "var(--p0)", opacity: 0.8 }}
           >
             略過
           </button>
